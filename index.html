@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Glosa — tema, término, definición</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c4a6e">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,700;1,8..60,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12151b;
+  --bg-2:#1a1e26;
+  --paper:#f4f0e6;
+  --paper-2:#ece5d2;
+  --ink:#201d18;
+  --ink-soft:#5c5546;
+  --rule:#d9d1ba;
+  --accent:#c98a2c;
+  --line:#2b3140;
+  --muted:#8b93a3;
+  --danger:#b6472f;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{
+  background:var(--bg);color:var(--paper);font-family:'Inter',sans-serif;
+  overflow:hidden;-webkit-tap-highlight-color:transparent;
+}
+.serif{font-family:'Source Serif 4',serif;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+#app{height:100vh;display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+  background:var(--bg-2);border-bottom:1px solid var(--line);flex-shrink:0;z-index:30;
+}
+.brand{font-family:'Source Serif 4';font-weight:700;font-style:italic;font-size:19px;color:var(--accent);}
+.temaSelectWrap{position:relative;flex:1;min-width:0;}
+#temaSelectBtn{
+  width:100%;background:var(--bg);border:1px solid var(--line);color:var(--paper);
+  padding:8px 10px;border-radius:8px;font-size:13px;text-align:left;cursor:pointer;
+  display:flex;align-items:center;gap:8px;font-family:'Inter';font-weight:600;
+}
+#temaSelectBtn .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+#temaSelectBtn .car{margin-left:auto;color:var(--muted);font-size:11px;}
+.temaMenu{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-2);
+  border:1px solid var(--line);border-radius:10px;padding:6px;z-index:40;display:none;
+  max-height:60vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+.temaMenu.show{display:block;}
+.temaMenuItem{
+  display:flex;align-items:center;gap:8px;padding:9px 8px;border-radius:7px;cursor:pointer;font-size:13.5px;
+}
+.temaMenuItem:hover,.temaMenuItem:active{background:var(--bg);}
+.temaMenuItem .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.temaMenuItem .nm{flex:1;font-weight:600;}
+.temaMenuItem .del{color:var(--muted);font-size:14px;padding:2px 6px;}
+.temaMenuAdd{border-top:1px solid var(--line);margin-top:4px;padding-top:8px;}
+.iconbtn{
+  background:none;border:1px solid var(--line);color:var(--paper);width:34px;height:34px;
+  border-radius:8px;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.iconbtn:active{background:rgba(255,255,255,0.06);}
+
+/* SEARCH */
+.searchrow{padding:8px 12px;background:var(--bg-2);border-bottom:1px solid var(--line);}
+#searchInput{
+  width:100%;background:var(--bg);border:1px solid var(--line);color:var(--paper);
+  padding:7px 10px;border-radius:8px;font-size:13px;font-family:'Inter';
+}
+
+/* MAIN GRID */
+.main{flex:1;display:flex;min-height:0;background:var(--paper);}
+.spine{
+  width:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  position:relative;background:var(--spine, #2c4a6e);
+}
+.spine .stitle{
+  writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Source Serif 4';font-weight:600;
+  font-style:italic;font-size:17px;color:#f4f0e6;letter-spacing:0.5px;padding:16px 0;cursor:pointer;
+  max-height:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.spine .tabs-deco{
+  position:absolute;right:-3px;top:0;bottom:0;width:6px;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,0.18) 0 6px, rgba(255,255,255,0.08) 6px 14px);
+}
+.rows-wrap{flex:1;min-width:0;overflow-y:auto;}
+.emptytema{padding:40px 20px;text-align:center;color:var(--ink-soft);font-size:14px;}
+.emptytema b{display:block;font-family:'Source Serif 4';font-size:19px;color:var(--ink);margin-bottom:6px;}
+
+.row{
+  display:flex;border-bottom:1px dashed var(--rule);cursor:pointer;
+}
+.row.expanded{cursor:default;background:rgba(201,138,44,0.05);}
+.term-cell{
+  width:34%;min-width:110px;flex-shrink:0;padding:12px 12px;border-right:1px solid var(--rule);
+  display:flex;align-items:center;
+}
+.term-input{
+  width:100%;background:none;border:none;color:var(--ink);font-family:'Source Serif 4';font-weight:600;
+  font-size:14.5px;pointer-events:none;
+}
+.row.expanded .term-input{pointer-events:auto;font-size:17px;}
+.term-input:focus{outline:none;}
+.def-cell{flex:1;min-width:0;padding:12px 14px;position:relative;}
+.def-preview{
+  font-size:12.5px;color:var(--ink-soft);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.row.expanded .def-preview{display:none;}
+.def-edit{display:none;width:100%;background:none;border:none;color:var(--ink);font-family:'Inter';
+  font-size:15.5px;line-height:1.6;resize:none;min-height:70px;}
+.def-edit:focus{outline:none;}
+.row.expanded .def-edit{display:block;}
+.rowactions{display:flex;align-items:flex-start;padding:10px 8px 0 0;gap:4px;}
+.rowbtn{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:4px;}
+.rowbtn:active{color:var(--danger);}
+.addrow{
+  padding:14px;text-align:center;color:var(--ink-soft);font-size:13px;font-weight:600;
+  cursor:pointer;border-bottom:1px solid transparent;
+}
+.addrow:active{background:var(--paper-2);}
+
+/* MODALS */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:100;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(340px,88vw);}
+.modal h3{margin:0 0 10px;font-family:'Source Serif 4';color:var(--accent);font-style:italic;}
+.modal p{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 14px;}
+.modal input[type=text]{
+  width:100%;background:var(--bg);border:1px solid var(--line);color:var(--paper);
+  padding:9px 10px;border-radius:8px;font-size:14px;margin-bottom:12px;font-family:'Inter';
+}
+.swatches{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.swatch{width:26px;height:26px;border-radius:7px;cursor:pointer;border:2px solid transparent;}
+.swatch.sel{border-color:var(--paper);}
+.row2{display:flex;gap:8px;justify-content:flex-end;}
+.btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--paper);font-size:13px;cursor:pointer;font-weight:600;}
+.btn.primary{background:var(--accent);color:#1c1a17;border-color:var(--accent);}
+.btn.danger{background:var(--danger);color:#fff;border-color:var(--danger);}
+::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand">Glosa</div>
+    <div class="temaSelectWrap">
+      <button id="temaSelectBtn"><span class="sw" id="curSw"></span><span id="curName">Sin temas</span><span class="car">▾</span></button>
+      <div class="temaMenu" id="temaMenu"></div>
+    </div>
+    <button class="iconbtn" id="dataBtn" title="Datos">⋮</button>
+  </div>
+  <div class="searchrow"><input id="searchInput" placeholder="Buscar término..."></div>
+  <div class="main">
+    <div class="spine" id="spine"><div class="tabs-deco"></div><div class="stitle" id="spineTitle">—</div></div>
+    <div class="rows-wrap" id="rowsWrap"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="temaModal">
+  <div class="modal">
+    <h3 id="temaModalTitle">Nuevo tema</h3>
+    <input type="text" id="temaNameInput" placeholder="Nombre del tema (ej. Biología celular)">
+    <p>Color del lomo</p>
+    <div class="swatches" id="swatches"></div>
+    <div class="row2">
+      <button class="btn" id="temaCancel">Cancelar</button>
+      <button class="btn primary" id="temaSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <h3 id="confirmTitle">Eliminar</h3>
+    <p id="confirmText">Esta acción no se puede deshacer.</p>
+    <div class="row2">
+      <button class="btn" id="confirmCancel">Cancelar</button>
+      <button class="btn danger" id="confirmOk">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="dataModal">
+  <div class="modal">
+    <h3>Datos</h3>
+    <p>Todo se guarda en este dispositivo, sin conexión a internet. Puedes exportar una copia de seguridad o importarla en otro equipo.</p>
+    <div class="row2" style="justify-content:space-between;">
+      <button class="btn" id="importBtn">Importar</button>
+      <button class="btn primary" id="exportBtn">Exportar</button>
+    </div>
+  </div>
+  <input type="file" id="fileInput" accept="application/json" style="display:none;">
+</div>
+
+<script>
+const PALETTE = ['#2c4a6e','#5c4a2c','#3d5c3a','#6e2c4a','#2c5c5c','#6e4a2c','#4a2c6e','#4a5c2c'];
+const uid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+
+let data = {temas:[], currentId:null};
+let searchQuery = '';
+let pendingDelete = null; // {type:'tema'|'term', id, temaId}
+
+function load(){
+  try{
+    const raw = localStorage.getItem('glosa-data');
+    if(raw){ data = JSON.parse(raw); return; }
+  }catch(e){}
+  seed();
+}
+function save(){
+  try{ localStorage.setItem('glosa-data', JSON.stringify(data)); }
+  catch(e){ console.error('No se pudo guardar localmente', e); }
+}
+function seed(){
+  const t1 = {id:uid(), title:'Términos de estudio', color:PALETTE[0], terms:[
+    {id:uid(), term:'Tema', definition:'La celda grande y vertical de la izquierda. Toca su nombre para cambiarlo.'},
+    {id:uid(), term:'Término', definition:'Cada fila pequeña de la columna central. Empieza compacta.'},
+    {id:uid(), term:'Definición', definition:'Toca cualquier fila para expandirla y ver o editar el texto completo, sin mover las demás filas ni afectar otras columnas.'}
+  ]};
+  data = {temas:[t1], currentId:t1.id};
+}
+
+function currentTema(){ return data.temas.find(t=>t.id===data.currentId); }
+
+// ---------- TEMA SELECT ----------
+function renderTemaSelect(){
+  const t = currentTema();
+  document.getElementById('curName').textContent = t ? t.title : 'Sin temas';
+  document.getElementById('curSw').style.background = t ? t.color : '#555';
+  document.getElementById('spine').style.setProperty('--spine', t ? t.color : '#333');
+  document.getElementById('spine').style.background = t ? t.color : '#333';
+  document.getElementById('spineTitle').textContent = t ? t.title : 'Crea un tema';
+
+  const menu = document.getElementById('temaMenu');
+  menu.innerHTML = data.temas.map(x=>`
+    <div class="temaMenuItem" data-id="${x.id}">
+      <span class="sw" style="background:${x.color}"></span>
+      <span class="nm">${escapeHtml(x.title)}</span>
+      <span class="del" data-del="${x.id}">🗑</span>
+    </div>`).join('') + `<div class="temaMenuAdd"><div class="temaMenuItem" id="addTemaItem"><span style="opacity:0.8;">+ Nuevo tema</span></div></div>`;
+
+  menu.querySelectorAll('.temaMenuItem[data-id]').forEach(el=>{
+    el.addEventListener('click', ev=>{
+      if(ev.target.dataset.del){ return; }
+      data.currentId = el.dataset.id; save(); closeTemaMenu(); renderAll();
+    });
+  });
+  menu.querySelectorAll('.del').forEach(el=>{
+    el.addEventListener('click', ev=>{
+      ev.stopPropagation();
+      openConfirm('tema', el.dataset.del, 'Eliminar tema', 'Se eliminarán también todos sus términos y definiciones.');
+    });
+  });
+  document.getElementById('addTemaItem').addEventListener('click', ()=>{
+    closeTemaMenu(); openTemaModal(null);
+  });
+}
+function openTemaMenu(){ document.getElementById('temaMenu').classList.add('show'); }
+function closeTemaMenu(){ document.getElementById('temaMenu').classList.remove('show'); }
+document.getElementById('temaSelectBtn').addEventListener('click', ()=>{
+  const m = document.getElementById('temaMenu');
+  m.classList.contains('show') ? closeTemaMenu() : openTemaMenu();
+});
+document.addEventListener('click', ev=>{
+  if(!ev.target.closest('.temaSelectWrap')) closeTemaMenu();
+});
+document.getElementById('spineTitle').addEventListener('click', ()=>{
+  const t = currentTema(); if(t) openTemaModal(t.id);
+});
+
+// ---------- TEMA MODAL ----------
+let editingTemaId = null;
+let selectedColor = PALETTE[0];
+function openTemaModal(temaId){
+  editingTemaId = temaId;
+  const t = temaId ? data.temas.find(x=>x.id===temaId) : null;
+  document.getElementById('temaModalTitle').textContent = t ? 'Editar tema' : 'Nuevo tema';
+  document.getElementById('temaNameInput').value = t ? t.title : '';
+  selectedColor = t ? t.color : PALETTE[data.temas.length % PALETTE.length];
+  const sw = document.getElementById('swatches');
+  sw.innerHTML = PALETTE.map(c=>`<div class="swatch ${c===selectedColor?'sel':''}" style="background:${c}" data-c="${c}"></div>`).join('');
+  sw.querySelectorAll('.swatch').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      selectedColor = el.dataset.c;
+      sw.querySelectorAll('.swatch').forEach(s=>s.classList.remove('sel'));
+      el.classList.add('sel');
+    });
+  });
+  document.getElementById('temaModal').classList.add('show');
+  setTimeout(()=>document.getElementById('temaNameInput').focus(), 50);
+}
+document.getElementById('temaCancel').addEventListener('click', ()=> document.getElementById('temaModal').classList.remove('show'));
+document.getElementById('temaSave').addEventListener('click', ()=>{
+  const name = document.getElementById('temaNameInput').value.trim() || 'Sin título';
+  if(editingTemaId){
+    const t = data.temas.find(x=>x.id===editingTemaId);
+    t.title = name; t.color = selectedColor;
+  } else {
+    const t = {id:uid(), title:name, color:selectedColor, terms:[]};
+    data.temas.push(t); data.currentId = t.id;
+  }
+  save(); document.getElementById('temaModal').classList.remove('show'); renderAll();
+});
+
+// ---------- CONFIRM MODAL ----------
+function openConfirm(type,id,title,text){
+  pendingDelete = {type,id};
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+  document.getElementById('confirmModal').classList.add('show');
+}
+document.getElementById('confirmCancel').addEventListener('click', ()=>{ pendingDelete=null; document.getElementById('confirmModal').classList.remove('show'); });
+document.getElementById('confirmOk').addEventListener('click', ()=>{
+  if(pendingDelete){
+    if(pendingDelete.type==='tema'){
+      data.temas = data.temas.filter(t=>t.id!==pendingDelete.id);
+      if(data.currentId===pendingDelete.id) data.currentId = data.temas[0]?.id || null;
+    } else if(pendingDelete.type==='term'){
+      const t = currentTema();
+      if(t) t.terms = t.terms.filter(term=>term.id!==pendingDelete.id);
+    }
+    save();
+  }
+  pendingDelete=null;
+  document.getElementById('confirmModal').classList.remove('show');
+  renderAll();
+});
+
+// ---------- ROWS ----------
+let expandedId = null;
+function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderRows(){
+  const wrap = document.getElementById('rowsWrap');
+  const t = currentTema();
+  if(!t){
+    wrap.innerHTML = `<div class="emptytema"><b>Crea tu primer tema</b>Toca "+ Nuevo tema" arriba para empezar a añadir términos y definiciones.</div>`;
+    return;
+  }
+  let terms = t.terms;
+  if(searchQuery.trim()){
+    const q = searchQuery.toLowerCase();
+    terms = terms.filter(x=>x.term.toLowerCase().includes(q) || x.definition.toLowerCase().includes(q));
+  }
+  if(terms.length===0){
+    wrap.innerHTML = `<div class="emptytema"><b>Sin términos todavía</b>Añade el primero para este tema.</div>` + addRowHtml();
+  } else {
+    wrap.innerHTML = terms.map(rowHtml).join('') + addRowHtml();
+  }
+  attachRowEvents();
+}
+function rowHtml(term){
+  const exp = term.id===expandedId;
+  return `<div class="row ${exp?'expanded':''}" data-id="${term.id}">
+    <div class="term-cell"><input class="term-input" data-id="${term.id}" value="${escapeHtml(term.term)}" placeholder="término"></div>
+    <div class="def-cell">
+      <div class="def-preview">${escapeHtml(term.definition) || 'Sin definición — toca para escribir.'}</div>
+      <textarea class="def-edit" data-id="${term.id}" placeholder="Escribe la definición...">${escapeHtml(term.definition)}</textarea>
+    </div>
+    <div class="rowactions"><button class="rowbtn" data-del="${term.id}">🗑</button></div>
+  </div>`;
+}
+function addRowHtml(){
+  return `<div class="addrow" id="addRowBtn">+ Añadir término</div>`;
+}
+function autoGrow(ta){ ta.style.height='auto'; ta.style.height = Math.max(70, ta.scrollHeight)+'px'; }
+function attachRowEvents(){
+  document.querySelectorAll('.row').forEach(rowEl=>{
+    rowEl.addEventListener('click', ev=>{
+      if(ev.target.closest('.rowbtn')) return;
+      const id = rowEl.dataset.id;
+      if(expandedId===id) return;
+      expandedId = id;
+      renderRows();
+      const ta = document.querySelector(`.def-edit[data-id="${id}"]`);
+      if(ta){ autoGrow(ta); }
+    });
+  });
+  document.querySelectorAll('.term-input').forEach(inp=>{
+    inp.addEventListener('click', ev=> ev.stopPropagation());
+    inp.addEventListener('input', ()=>{
+      const t = currentTema(); const term = t.terms.find(x=>x.id===inp.dataset.id);
+      if(term){ term.term = inp.value; save(); }
+    });
+  });
+  document.querySelectorAll('.def-edit').forEach(ta=>{
+    ta.addEventListener('click', ev=> ev.stopPropagation());
+    ta.addEventListener('input', ()=>{
+      const t = currentTema(); const term = t.terms.find(x=>x.id===ta.dataset.id);
+      if(term){ term.definition = ta.value; save(); }
+      autoGrow(ta);
+    });
+    ta.addEventListener('blur', ()=>{ expandedId = null; renderRows(); });
+  });
+  document.querySelectorAll('[data-del]').forEach(btn=>{
+    if(!btn.classList.contains('rowbtn')) return;
+    btn.addEventListener('click', ev=>{
+      ev.stopPropagation();
+      openConfirm('term', btn.dataset.del, 'Eliminar término', 'Se borrará este término y su definición.');
+    });
+  });
+  const addBtn = document.getElementById('addRowBtn');
+  if(addBtn) addBtn.addEventListener('click', ()=>{
+    const t = currentTema(); if(!t) return;
+    const nt = {id:uid(), term:'', definition:''};
+    t.terms.push(nt); save();
+    expandedId = nt.id;
+    renderRows();
+    setTimeout(()=>{ const inp = document.querySelector(`.term-input[data-id="${nt.id}"]`); if(inp) inp.focus(); },30);
+  });
+}
+document.getElementById('searchInput').addEventListener('input', e=>{ searchQuery = e.target.value; renderRows(); });
+
+// ---------- DATA MODAL ----------
+document.getElementById('dataBtn').addEventListener('click', ()=> document.getElementById('dataModal').classList.add('show'));
+document.getElementById('dataModal').addEventListener('click', e=>{ if(e.target.id==='dataModal') e.target.classList.remove('show'); });
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='glosa-backup.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const d = JSON.parse(reader.result);
+      if(d.temas){ data = d; save(); renderAll(); document.getElementById('dataModal').classList.remove('show'); }
+    }catch(err){ alert('Archivo no válido'); }
+  };
+  reader.readAsText(file);
+});
+
+// ---------- INIT ----------
+function renderAll(){ renderTemaSelect(); renderRows(); }
+load();
+renderAll();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
