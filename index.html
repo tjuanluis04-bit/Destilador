@@ -69,6 +69,10 @@ body::before{
 
 :focus-visible{ outline:2px solid var(--yellow-bg); outline-offset:2px; }
 
+/* Blindaje: cualquier elemento con el atributo hidden debe ocultarse
+   de verdad, sin importar qué otra regla le haya puesto display más abajo. */
+[hidden]{ display:none !important; }
+
 .dogear{
   position:fixed; top:0; right:0; width:52px; height:52px; z-index:5; pointer-events:none;
   background:linear-gradient(135deg, transparent 50%, #d9cca4 50%);
@@ -125,16 +129,31 @@ body::before{
 
 /* ================= shelf (estantería) ================= */
 .shelf-view{ position:relative; z-index:1; padding:0.5rem clamp(1.2rem,5vw,3.5rem) 5rem clamp(2.2rem,7vw,4.2rem); }
-.shelf-title{ font-family:var(--hand); font-size:1.7rem; margin:0 0 1.2rem; color:var(--ink); }
+.shelf-heading{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:1rem;
+  flex-wrap:wrap; margin-bottom:2rem;
+}
+.shelf-title{ font-family:var(--hand); font-size:1.9rem; margin:0 0 0.2rem; color:var(--ink); }
+.shelf-sub{ font-family:var(--hand); font-size:1rem; color:var(--ink-soft); margin:0; }
+.shelf-category{ margin-bottom:2.6rem; }
+.shelf-category-title{
+  font-family:var(--hand); font-size:1.25rem; color:var(--ink-soft);
+  margin:0 0 1.1rem; padding-bottom:0.35rem;
+  border-bottom:2px dashed #d9c99a;
+  display:flex; align-items:baseline; gap:0.5rem;
+}
+.shelf-category-title .count{ font-family:var(--mono); font-size:0.65rem; color:#a89a6d; }
 .shelf-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
-  gap:1.6rem 1.4rem;
+  gap:2.4rem 1.6rem;
 }
 .book-card{
   cursor:pointer; border:none; background:none; padding:0; text-align:left;
   font-family:inherit; color:inherit;
+  transition:transform .15s ease;
 }
+.book-card:hover{ transform:translateY(-3px); }
 .book-card-cover{
   position:relative;
   aspect-ratio:2/3;
@@ -156,31 +175,37 @@ body::before{
   position:absolute; top:-8px; left:50%; transform:translateX(-50%) rotate(-4deg);
   width:64px; height:20px; background:var(--blue); opacity:0.7;
   box-shadow:0 1px 3px rgba(0,0,0,0.2);
+  z-index:2;
 }
-.book-card-meta{ margin-top:0.5rem; padding-left:0.2rem; }
+.book-card-cover::after{
+  /* la repisa de madera bajo cada libro */
+  content:"";
+  position:absolute; left:-8px; right:-8px; bottom:-9px; height:11px;
+  background:linear-gradient(to bottom, #b58a52, #8f6a3c);
+  transform:rotate(calc(-1 * var(--tilt,-1deg)));
+  box-shadow:0 4px 6px rgba(0,0,0,0.3);
+  border-radius:1px;
+}
+.book-card-delete{
+  position:absolute; top:6px; right:6px; z-index:3;
+  width:1.6rem; height:1.6rem; border-radius:50%;
+  background:rgba(255,253,247,0.85); color:var(--ink-soft);
+  border:1px solid rgba(0,0,0,0.1);
+  font-family:var(--sans); font-size:0.85rem; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.book-card-delete:hover{ color:var(--red); border-color:var(--red); }
+.book-card-meta{ margin-top:0.7rem; padding-left:0.2rem; }
 .book-card-title{ font-family:var(--serif); font-style:italic; font-size:1rem; color:var(--ink); line-height:1.25; }
 .book-card-author{ font-family:var(--hand); font-size:0.88rem; color:var(--ink-soft); }
 .book-card-count{ font-family:var(--mono); font-size:0.65rem; color:var(--ink-soft); margin-top:0.15rem; }
-.book-card-delete{
-  margin-top:0.3rem; font-family:var(--hand); font-size:0.82rem; color:var(--red);
-  background:none; border:none; cursor:pointer; padding:0;
-}
 
-.add-book-tile{
-  aspect-ratio:2/3;
-  border:2px dashed #c9b98c; background:transparent; cursor:pointer;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.4rem;
-  color:var(--ink-soft); font-family:var(--hand); font-size:1.15rem; border-radius:2px;
-}
-.add-book-tile:hover{ border-color:var(--ink); color:var(--ink); background:rgba(0,0,0,0.02); }
-.add-book-plus{ font-size:2.2rem; line-height:1; }
-
-.shelf-empty{
+.shelf-empty-msg{
   border:2px dashed #c9b98c; padding:2.2rem 1.4rem; text-align:center;
   color:var(--ink-soft); font-family:var(--hand); font-size:1.15rem; border-radius:3px;
-  margin-bottom:1.6rem;
 }
-.shelf-empty .sub{ font-family:var(--sans); font-size:0.75rem; margin-top:0.4rem; }
+.shelf-empty-msg .sub{ font-family:var(--sans); font-size:0.75rem; margin-top:0.4rem; }
 
 /* ================= layout de trabajo ================= */
 .workshop{
@@ -221,6 +246,7 @@ body::before{
 }
 .cover-drop.dragover{ background:#e6dab5; }
 #coverImg{ width:100%; height:100%; object-fit:cover; display:block; }
+#coverImg[hidden]{ display:none; }
 .cover-empty{
   display:flex; flex-direction:column; align-items:center; gap:0.4rem;
   color:#8b7f5c; font-family:var(--hand); font-size:1.15rem;
@@ -289,6 +315,7 @@ body::before{
   transform:rotate(-3deg);
   box-shadow:2px 2px 5px rgba(0,0,0,0.2);
   z-index:2;
+  cursor:pointer;
 }
 .chapter-row:nth-child(3n+2) .chapter-tab{ background:var(--blue); color:#12283b; }
 .chapter-row:nth-child(3n) .chapter-tab{ background:var(--green-bg); color:#1c3320; }
@@ -297,11 +324,21 @@ body::before{
   display:flex; align-items:center; gap:0.7rem; flex-wrap:wrap;
   padding:1rem 1.1rem 0.8rem 2.6rem;
   border-bottom:1.5px dashed #d9c99a;
+  cursor:pointer;
 }
+.chapter-toggle{
+  background:none; border:none; cursor:pointer;
+  font-size:1.15rem; color:var(--ink-soft); line-height:1;
+  padding:0.2rem 0.1rem; flex-shrink:0;
+}
+.chapter-body.is-open .chapter-toggle{ color:var(--red); }
+.chapter-body:not(.is-open) .chapter-grid{ display:none; }
+.chapter-grid[hidden]{ display:none; }
 .chapter-title-input{
   flex:1 1 180px; background:transparent; border:none;
   font-family:var(--serif); font-style:italic; font-size:1.2rem; color:var(--ink);
   border-bottom:1.5px dotted transparent; padding:0.15rem 0.1rem;
+  cursor:text;
 }
 .chapter-title-input:focus{ border-bottom-color:var(--red); }
 .chapter-title-input::placeholder{ color:#a89a6d; }
@@ -314,7 +351,7 @@ body::before{
 .icon-btn:hover{ color:var(--ink); border-color:var(--ink); }
 .icon-btn.danger:hover{ color:var(--red); border-color:var(--red); }
 
-.chapter-grid{ display:grid; grid-template-columns:1.05fr 1fr 1fr 1.1fr; }
+.chapter-grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1.15fr; }
 @media (max-width:1100px){ .chapter-grid{ grid-template-columns:1fr 1fr; } }
 @media (max-width:640px){ .chapter-grid{ grid-template-columns:1fr; } }
 
@@ -348,9 +385,27 @@ textarea{
   background-image:repeating-linear-gradient(to bottom, transparent 0 26px, #e7dcc0 26px 27px);
 }
 textarea:focus{ border-color:var(--ink-soft); }
-.full-text{ font-family:var(--mono); font-size:0.76rem; background-image:none; }
-.distillation{ border-left:3px solid var(--red); }
-.social-script{ border-left:3px solid var(--yellow); }
+.full-text{
+  font-family:var(--serif); font-size:1.04rem; line-height:1.9;
+  letter-spacing:0.005em; padding:1rem 1.1rem; min-height:150px;
+  background-image:repeating-linear-gradient(to bottom, transparent 0 34px, #e7dcc0 34px 35px);
+}
+.distillation{ border-left:3px solid var(--red); font-size:1rem; line-height:1.8; }
+.social-script{
+  font-family:var(--sans); font-size:0.95rem; line-height:1.65;
+  border-left:3px solid var(--yellow);
+}
+
+.full-text-editor{ display:flex; flex-direction:column; gap:0.8rem; flex:1; }
+.ft-text-block{ display:flex; flex-direction:column; }
+.ft-image-block{ position:relative; }
+.ft-image-block img{ width:100%; display:block; border-radius:2px; border:1px solid #e0d3a6; }
+.ft-remove-block{
+  align-self:flex-start; margin-top:0.3rem;
+  font-family:var(--hand); font-size:0.82rem; color:var(--red);
+  background:none; border:none; cursor:pointer; padding:0;
+}
+.full-text-toolbar{ display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.8rem; }
 
 .mindmap-wrap{ display:flex; flex-direction:column; gap:0.5rem; flex:1; }
 .mindmap-canvas{
@@ -395,12 +450,18 @@ textarea:focus{ border-color:var(--ink-soft); }
 
 <!-- ===== estantería ===== -->
 <main id="shelfView" class="shelf-view">
-  <h2 class="shelf-title">tu estantería</h2>
-  <div id="shelfEmpty" class="shelf-empty" hidden>
-    <p>tu estantería está vacía.</p>
-    <p class="sub">añade tu primer libro para empezar a destilarlo.</p>
+  <div class="shelf-heading">
+    <div>
+      <h2 class="shelf-title">tu estantería</h2>
+      <p class="shelf-sub">toca un libro para seguir destilándolo</p>
+    </div>
+    <button id="addBookBtn" class="btn btn-seal">+ nuevo libro</button>
   </div>
-  <div id="shelfGrid" class="shelf-grid"></div>
+  <div id="shelfSections"></div>
+  <div id="shelfEmptyMsg" class="shelf-empty-msg" hidden>
+    <p>tu estantería está vacía.</p>
+    <p class="sub">toca «+ nuevo libro» para crear el primero.</p>
+  </div>
 </main>
 
 <!-- ===== espacio de trabajo de un libro ===== -->
@@ -431,6 +492,11 @@ textarea:focus{ border-color:var(--ink-soft); }
         <span class="field-label">de:</span>
         <input type="text" id="bookAuthor" class="field-input" placeholder="autoría desconocida">
       </div>
+      <div class="field-row">
+        <span class="field-label">categoría:</span>
+        <input type="text" id="bookCategory" class="field-input" placeholder="sin categoría" list="categoryOptions">
+        <datalist id="categoryOptions"></datalist>
+      </div>
     </div>
 
     <div class="pipe-note">nota: cada capítulo que agregues abajo tiene su propio espacio para el texto completo, y al lado su destilación, su guion social y su mapa mental.</div>
@@ -455,6 +521,7 @@ textarea:focus{ border-color:var(--ink-soft); }
     <div class="chapter-body">
       <span class="chapter-tab"></span>
       <div class="chapter-header">
+        <button type="button" class="chapter-toggle">▸</button>
         <input type="text" class="chapter-title-input field-input" placeholder="título del capítulo">
         <span class="chapter-meta"></span>
         <div class="chapter-controls">
@@ -466,10 +533,16 @@ textarea:focus{ border-color:var(--ink-soft); }
       <div class="chapter-grid">
         <div class="cell cell-text">
           <span class="cell-label label-text">capítulo completo</span>
-          <textarea class="full-text" placeholder="pega aquí el texto completo del capítulo…"></textarea>
-          <label class="btn btn-tiny upload-txt-label">subir .txt
-            <input type="file" accept=".txt,text/plain" class="upload-txt" hidden>
-          </label>
+          <div class="full-text-editor"></div>
+          <div class="full-text-toolbar">
+            <button type="button" class="btn btn-tiny add-text-block">+ texto</button>
+            <label class="btn btn-tiny">+ imagen
+              <input type="file" accept="image/*" class="add-image-block" hidden>
+            </label>
+            <label class="btn btn-tiny upload-txt-label">subir .txt
+              <input type="file" accept=".txt,text/plain" class="upload-txt" hidden>
+            </label>
+          </div>
         </div>
         <div class="cell cell-distill">
           <span class="cell-label label-distill">destilación</span>
@@ -502,17 +575,23 @@ textarea:focus{ border-color:var(--ink-soft); }
 
   function toRoman(n){ return (n>=1 && n<=ROMAN.length) ? ROMAN[n-1] : String(n); }
   function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
-  function blankBook(){ return { id:uid(), title:"", author:"", cover:null, chapters:[] }; }
+  function blankBook(){ return { id:uid(), title:"", author:"", category:"", cover:null, chapters:[] }; }
   function defaultData(){ return { books:[] }; }
 
   function normalizeBook(b){
     if(!b.id) b.id = uid();
+    if(typeof b.category !== "string") b.category = "";
     if(!Array.isArray(b.chapters)) b.chapters = [];
     b.chapters.forEach(c => {
       if(!c.id) c.id = uid();
       if(!c.mindmap) c.mindmap = { nodes:[], edges:[] };
       if(!Array.isArray(c.mindmap.nodes)) c.mindmap.nodes = [];
       if(!Array.isArray(c.mindmap.edges)) c.mindmap.edges = [];
+      if(!Array.isArray(c.fullTextBlocks)){
+        const legacyText = typeof c.fullText === "string" ? c.fullText : "";
+        c.fullTextBlocks = [{ id:uid(), type:"text", content:legacyText }];
+      }
+      c.fullTextBlocks.forEach(block => { if(!block.id) block.id = uid(); });
     });
     return b;
   }
@@ -552,6 +631,7 @@ textarea:focus{ border-color:var(--ink-soft); }
 
   let data = loadData();
   let currentBookId = null;
+  let openChapterId = null;
   let saveTimer = null;
   function save(){
     clearTimeout(saveTimer);
@@ -564,11 +644,12 @@ textarea:focus{ border-color:var(--ink-soft); }
 
   const $ = sel => document.querySelector(sel);
   const shelfView = $("#shelfView"), workshopView = $("#workshopView");
-  const shelfGrid = $("#shelfGrid"), shelfEmpty = $("#shelfEmpty");
+  const shelfSections = $("#shelfSections"), shelfEmptyMsg = $("#shelfEmptyMsg"), addBookBtn = $("#addBookBtn");
   const backLink = $("#backLink"), wordmarkBtn = $("#wordmarkBtn");
   const coverDrop = $("#coverDrop"), coverInput = $("#coverInput"), coverImg = $("#coverImg"),
         coverEmpty = $("#coverEmpty"), coverClear = $("#coverClear"),
-        bookTitle = $("#bookTitle"), bookAuthor = $("#bookAuthor"),
+        bookTitle = $("#bookTitle"), bookAuthor = $("#bookAuthor"), bookCategory = $("#bookCategory"),
+        categoryOptions = $("#categoryOptions"),
         chapterList = $("#chapterList"), emptyState = $("#emptyState"),
         addChapterBtn = $("#addChapterBtn"), chapterTemplate = $("#chapterTemplate"),
         exportBtn = $("#exportBtn"), importInput = $("#importInput");
@@ -583,6 +664,8 @@ textarea:focus{ border-color:var(--ink-soft); }
   }
   function openBook(id){
     currentBookId = id;
+    const book = getCurrentBook();
+    openChapterId = book && book.chapters.length ? book.chapters[0].id : null;
     shelfView.hidden = true;
     backLink.hidden = false;
     workshopView.hidden = false;
@@ -595,70 +678,104 @@ textarea:focus{ border-color:var(--ink-soft); }
   // ---------- estantería ----------
   function wordCount(text){ const t=(text||"").trim(); return t? t.split(/\s+/).length : 0; }
 
-  function renderShelf(){
-    shelfGrid.innerHTML = "";
-    shelfEmpty.hidden = data.books.length !== 0;
-
+  function groupedByCategory(){
+    const map = new Map();
     data.books.forEach(book => {
-      const card = document.createElement("button");
-      card.className = "book-card";
-      card.type = "button";
-
-      const coverWrap = document.createElement("div");
-      coverWrap.className = "book-card-cover";
-      const tape = document.createElement("span");
-      tape.className = "book-card-tape";
-      coverWrap.appendChild(tape);
-      if(book.cover){
-        const img = document.createElement("img");
-        img.src = book.cover; img.alt = "";
-        coverWrap.appendChild(img);
-      } else {
-        const ph = document.createElement("div");
-        ph.className = "placeholder";
-        ph.textContent = book.title || "sin título";
-        coverWrap.appendChild(ph);
-      }
-
-      const meta = document.createElement("div");
-      meta.className = "book-card-meta";
-      meta.innerHTML = `
-        <div class="book-card-title">${escapeHtml(book.title || "sin título")}</div>
-        <div class="book-card-author">${escapeHtml(book.author || "autoría desconocida")}</div>
-        <div class="book-card-count">${book.chapters.length} capítulo${book.chapters.length===1?"":"s"}</div>
-      `;
-
-      card.appendChild(coverWrap);
-      card.appendChild(meta);
-      card.addEventListener("click", () => openBook(book.id));
-
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "book-card-delete";
-      del.textContent = "eliminar";
-      del.addEventListener("click", e => {
-        e.stopPropagation();
-        if(!confirm(`¿Eliminar "${book.title || "este libro"}" y todo su trabajo? Esto no se puede deshacer.`)) return;
-        data.books = data.books.filter(b => b.id !== book.id);
-        save(); renderShelf();
-      });
-      meta.appendChild(del);
-
-      shelfGrid.appendChild(card);
+      const key = (book.category || "").trim() || "sin categoría";
+      if(!map.has(key)) map.set(key, []);
+      map.get(key).push(book);
     });
-
-    const addTile = document.createElement("button");
-    addTile.type = "button";
-    addTile.className = "add-book-tile";
-    addTile.innerHTML = `<span class="add-book-plus">+</span><span>nuevo libro</span>`;
-    addTile.addEventListener("click", () => {
-      const book = blankBook();
-      data.books.push(book);
-      save();
-      openBook(book.id);
+    const keys = Array.from(map.keys()).sort((a,b) => {
+      if(a === "sin categoría") return 1;
+      if(b === "sin categoría") return -1;
+      return a.localeCompare(b, "es");
     });
-    shelfGrid.appendChild(addTile);
+    return keys.map(name => ({ name, books:map.get(name) }));
   }
+
+  function renderBookCard(book){
+    const card = document.createElement("button");
+    card.className = "book-card";
+    card.type = "button";
+
+    const coverWrap = document.createElement("div");
+    coverWrap.className = "book-card-cover";
+    const tape = document.createElement("span");
+    tape.className = "book-card-tape";
+    coverWrap.appendChild(tape);
+    if(book.cover){
+      const img = document.createElement("img");
+      img.src = book.cover; img.alt = "";
+      coverWrap.appendChild(img);
+    } else {
+      const ph = document.createElement("div");
+      ph.className = "placeholder";
+      ph.textContent = book.title || "sin título";
+      coverWrap.appendChild(ph);
+    }
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "book-card-delete";
+    del.textContent = "✕";
+    del.title = "Eliminar libro";
+    del.addEventListener("click", e => {
+      e.stopPropagation();
+      if(!confirm(`¿Eliminar "${book.title || "este libro"}" y todo su trabajo? Esto no se puede deshacer.`)) return;
+      data.books = data.books.filter(b => b.id !== book.id);
+      save(); renderShelf();
+    });
+    coverWrap.appendChild(del);
+
+    const meta = document.createElement("div");
+    meta.className = "book-card-meta";
+    meta.innerHTML = `
+      <div class="book-card-title">${escapeHtml(book.title || "sin título")}</div>
+      <div class="book-card-author">${escapeHtml(book.author || "autoría desconocida")}</div>
+      <div class="book-card-count">${book.chapters.length} capítulo${book.chapters.length===1?"":"s"}</div>
+    `;
+
+    card.appendChild(coverWrap);
+    card.appendChild(meta);
+    card.addEventListener("click", () => openBook(book.id));
+    return card;
+  }
+
+  function renderShelf(){
+    shelfSections.innerHTML = "";
+    shelfEmptyMsg.hidden = data.books.length !== 0;
+
+    groupedByCategory().forEach(group => {
+      const section = document.createElement("section");
+      section.className = "shelf-category";
+
+      const heading = document.createElement("h3");
+      heading.className = "shelf-category-title";
+      heading.innerHTML = `${escapeHtml(group.name)} <span class="count">${group.books.length}</span>`;
+      section.appendChild(heading);
+
+      const grid = document.createElement("div");
+      grid.className = "shelf-grid";
+      group.books.forEach(book => grid.appendChild(renderBookCard(book)));
+      section.appendChild(grid);
+
+      shelfSections.appendChild(section);
+    });
+  }
+
+  addBookBtn.addEventListener("click", () => {
+    const existing = Array.from(new Set(
+      data.books.map(b => (b.category||"").trim()).filter(Boolean)
+    )).sort((a,b) => a.localeCompare(b,"es"));
+    const hint = existing.length ? `Categorías que ya tienes: ${existing.join(", ")}.\n\n` : "";
+    const category = prompt(hint + "¿En qué categoría va este libro? (déjalo vacío si no quieres una)", "");
+    if(category === null) return;
+    const book = blankBook();
+    book.category = category.trim();
+    data.books.push(book);
+    save();
+    renderShelf();
+  });
 
   function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]));
@@ -670,6 +787,10 @@ textarea:focus{ border-color:var(--ink-soft); }
     if(!book) return;
     bookTitle.value = book.title || "";
     bookAuthor.value = book.author || "";
+    bookCategory.value = book.category || "";
+    categoryOptions.innerHTML = Array.from(new Set(
+      data.books.map(b => (b.category||"").trim()).filter(Boolean)
+    )).map(c => `<option value="${escapeHtml(c)}"></option>`).join("");
     if(book.cover){
       coverImg.src = book.cover; coverImg.hidden = false;
       coverEmpty.hidden = true; coverClear.hidden = false;
@@ -679,6 +800,7 @@ textarea:focus{ border-color:var(--ink-soft); }
   }
   bookTitle.addEventListener("input", () => { const b=getCurrentBook(); if(b){ b.title = bookTitle.value; save(); } });
   bookAuthor.addEventListener("input", () => { const b=getCurrentBook(); if(b){ b.author = bookAuthor.value; save(); } });
+  bookCategory.addEventListener("input", () => { const b=getCurrentBook(); if(b){ b.category = bookCategory.value; save(); } });
 
   function readImageFile(file){
     const book = getCurrentBook(); if(!book) return;
@@ -701,10 +823,67 @@ textarea:focus{ border-color:var(--ink-soft); }
   // ---------- capítulos ----------
   function addChapter(){
     const book = getCurrentBook(); if(!book) return;
-    book.chapters.push({ id:uid(), title:"", fullText:"", distillation:"", socialScript:"", mindmap:{nodes:[],edges:[]} });
+    const chapter = {
+      id:uid(), title:"",
+      fullTextBlocks:[{ id:uid(), type:"text", content:"" }],
+      distillation:"", socialScript:"", mindmap:{nodes:[],edges:[]}
+    };
+    book.chapters.push(chapter);
+    openChapterId = chapter.id;
     save(); renderChapters();
   }
   addChapterBtn.addEventListener("click", addChapter);
+
+  function computeWordCount(chapter){
+    const text = chapter.fullTextBlocks.filter(b => b.type === "text").map(b => b.content).join(" ");
+    return wordCount(text);
+  }
+
+  function renderFullTextBlocks(container, chapter, metaEl){
+    container.innerHTML = "";
+    chapter.fullTextBlocks.forEach(block => {
+      if(block.type === "image"){
+        const wrap = document.createElement("div");
+        wrap.className = "ft-image-block";
+        const img = document.createElement("img");
+        img.src = block.src; img.alt = "";
+        const rm = document.createElement("button");
+        rm.type = "button"; rm.className = "ft-remove-block";
+        rm.textContent = "quitar imagen";
+        rm.addEventListener("click", () => {
+          chapter.fullTextBlocks = chapter.fullTextBlocks.filter(b => b.id !== block.id);
+          save(); renderFullTextBlocks(container, chapter, metaEl);
+        });
+        wrap.appendChild(img); wrap.appendChild(rm);
+        container.appendChild(wrap);
+      } else {
+        const wrap = document.createElement("div");
+        wrap.className = "ft-text-block";
+        const ta = document.createElement("textarea");
+        ta.className = "full-text";
+        ta.placeholder = "texto del capítulo…";
+        ta.value = block.content;
+        ta.addEventListener("input", () => {
+          block.content = ta.value;
+          metaEl.textContent = computeWordCount(chapter) + " palabras";
+          save();
+        });
+        wrap.appendChild(ta);
+        if(chapter.fullTextBlocks.length > 1){
+          const rm = document.createElement("button");
+          rm.type = "button"; rm.className = "ft-remove-block";
+          rm.textContent = "quitar bloque";
+          rm.addEventListener("click", () => {
+            chapter.fullTextBlocks = chapter.fullTextBlocks.filter(b => b.id !== block.id);
+            save(); renderFullTextBlocks(container, chapter, metaEl);
+          });
+          wrap.appendChild(rm);
+        }
+        container.appendChild(wrap);
+      }
+    });
+    metaEl.textContent = computeWordCount(chapter) + " palabras";
+  }
 
   function renderChapters(){
     const book = getCurrentBook();
@@ -717,25 +896,59 @@ textarea:focus{ border-color:var(--ink-soft); }
       node.dataset.id = chapter.id;
       node.querySelector(".chapter-tab").textContent = toRoman(index+1);
 
+      const isOpen = chapter.id === openChapterId;
+      const chapterBody = node.querySelector(".chapter-body");
+      const toggleBtn = node.querySelector(".chapter-toggle");
+      const headerEl = node.querySelector(".chapter-header");
+      const tabEl = node.querySelector(".chapter-tab");
+      chapterBody.classList.toggle("is-open", isOpen);
+      toggleBtn.textContent = isOpen ? "▼" : "▸";
+
+      const toggleThisChapter = () => {
+        openChapterId = (openChapterId === chapter.id) ? null : chapter.id;
+        renderChapters();
+      };
+      toggleBtn.addEventListener("click", toggleThisChapter);
+      tabEl.addEventListener("click", toggleThisChapter);
+      headerEl.addEventListener("click", e => {
+        if(e.target.closest(".chapter-title-input, .chapter-controls, .chapter-toggle")) return;
+        toggleThisChapter();
+      });
+
       const titleInput = node.querySelector(".chapter-title-input");
       titleInput.value = chapter.title;
       titleInput.addEventListener("input", () => { chapter.title = titleInput.value; save(); });
+      titleInput.addEventListener("click", e => e.stopPropagation());
 
       const meta = node.querySelector(".chapter-meta");
-      const fullText = node.querySelector(".full-text");
-      fullText.value = chapter.fullText;
-      const updateMeta = () => { meta.textContent = wordCount(fullText.value) + " palabras"; };
-      updateMeta();
-      fullText.addEventListener("input", () => { chapter.fullText = fullText.value; updateMeta(); save(); });
+      const editorEl = node.querySelector(".full-text-editor");
+      renderFullTextBlocks(editorEl, chapter, meta);
+
+      node.querySelector(".add-text-block").addEventListener("click", () => {
+        chapter.fullTextBlocks.push({ id:uid(), type:"text", content:"" });
+        save(); renderFullTextBlocks(editorEl, chapter, meta);
+      });
+
+      const addImageInput = node.querySelector(".add-image-block");
+      addImageInput.addEventListener("change", () => {
+        const file = addImageInput.files[0]; if(!file || !file.type.startsWith("image/")) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          chapter.fullTextBlocks.push({ id:uid(), type:"image", src:reader.result });
+          save(); renderFullTextBlocks(editorEl, chapter, meta);
+        };
+        reader.readAsDataURL(file);
+        addImageInput.value = "";
+      });
 
       const uploadTxt = node.querySelector(".upload-txt");
       uploadTxt.addEventListener("change", () => {
         const file = uploadTxt.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = () => {
-          fullText.value = reader.result; chapter.fullText = reader.result;
+          chapter.fullTextBlocks.push({ id:uid(), type:"text", content:reader.result });
           if(!chapter.title){ chapter.title = file.name.replace(/\.txt$/i,""); titleInput.value = chapter.title; }
-          updateMeta(); save();
+          save(); renderFullTextBlocks(editorEl, chapter, meta);
         };
         reader.readAsText(file); uploadTxt.value = "";
       });
