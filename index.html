@@ -292,6 +292,7 @@ body::before{
   padding:10px 10px 34px;
   box-shadow:0 10px 24px rgba(0,0,0,0.25);
   transform:rotate(-1.6deg);
+  transition:background-color .15s;
 }
 .tape{
   position:absolute; height:26px; width:78px;
@@ -321,6 +322,20 @@ body::before{
 .cover-empty .hint{ font-family:var(--sans); font-size:0.68rem; color:var(--muted); }
 .photo-caption{ font-family:var(--hand); font-weight:600; text-align:center; color:var(--ink-soft); font-size:0.9rem; margin-top:4px; }
 .cover-clear{ display:block; margin:0.5rem auto 0; font-family:var(--hand); font-weight:600; font-size:0.9rem; background:none; border:none; color:var(--red); cursor:pointer; }
+
+.frame-color-row{ margin-top:1rem; display:flex; align-items:flex-start; gap:0.6rem; }
+.frame-swatches{ display:flex; flex-wrap:wrap; gap:0.45rem; flex:1; }
+.frame-swatch{
+  width:1.6rem; height:1.6rem; border-radius:50%; padding:0; cursor:pointer;
+  border:1.5px solid rgba(0,0,0,0.15); transition:transform .1s, box-shadow .1s;
+}
+.frame-swatch:hover{ transform:scale(1.12); }
+.frame-swatch.active{ box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.frame-swatch-custom{
+  display:flex; align-items:center; justify-content:center;
+  background:conic-gradient(from 0deg, #f2a9a9, #f7e26b, #a9d9a0, #a9c9e8, #d98fa0, #f2a9a9);
+  font-size:0.8rem;
+}
 
 .bookplate-fields{ margin-top:1.6rem; padding-left:0.4rem; }
 .field-row{ display:flex; align-items:baseline; gap:0.5rem; margin-bottom:0.9rem; }
@@ -368,6 +383,7 @@ body::before{
   border:1px solid var(--border);
   box-shadow:3px 5px 14px rgba(60,45,20,0.15);
   position:relative;
+  overflow-x:hidden;
 }
 .chapter-row:nth-child(odd) .chapter-body{ transform:rotate(-0.35deg); }
 .chapter-row:nth-child(even) .chapter-body{ transform:rotate(0.35deg); }
@@ -423,7 +439,7 @@ body::before{
 .cell{
   padding:0.9rem 1rem 1.1rem;
   border-right:1.5px dashed var(--border-strong);
-  display:flex; flex-direction:column; min-height:220px;
+  display:flex; flex-direction:column; min-height:220px; min-width:0;
 }
 .cell:last-child{ border-right:none; }
 @media (max-width:1100px){ .cell{ border-bottom:1.5px dashed var(--border-strong); } }
@@ -484,27 +500,30 @@ textarea:focus{ border-color:var(--ink-soft); }
 }
 .hl-erase:hover{ color:var(--red); border-color:var(--red); }
 
-/* ---- editor de capítulo: una sola página continua ---- */
+/* ---- editor de capítulo: caja con su propio scroll, texto e imágenes en un mismo flujo ---- */
 .full-text-editor{
   flex:1; display:flex; flex-direction:column; gap:1rem;
   background:var(--surface-2);
   border:1px solid var(--border);
-  padding:1rem 1.1rem; min-height:260px;
+  padding:1rem 1.1rem;
+  max-height:320px; min-height:220px;
+  overflow-y:auto; overflow-x:hidden;
   background-image:repeating-linear-gradient(to bottom, transparent 0 34px, var(--rule-line) 34px 35px);
 }
-.ft-text-block{ position:relative; }
+.ft-text-block{ position:relative; max-width:100%; }
 .ft-editable{
   outline:none;
   font-family:var(--serif); font-size:1.04rem; line-height:1.9;
   letter-spacing:0.005em; color:var(--ink);
   min-height:1.9em;
+  overflow-wrap:break-word; word-break:break-word;
 }
 .ft-editable:empty::before{
   content:attr(data-placeholder);
   color:var(--muted); font-style:italic;
 }
 .ft-editable mark{ border-radius:2px; padding:0 0.05em; }
-.ft-image-block{ position:relative; text-align:center; }
+.ft-image-block{ position:relative; text-align:center; max-width:100%; }
 .ft-image-frame{ position:relative; display:inline-block; max-width:70%; }
 .ft-image-frame img{
   max-width:100%; max-height:420px; width:auto; height:auto;
@@ -592,7 +611,7 @@ textarea:focus{ border-color:var(--ink-soft); }
 <main id="workshopView" class="workshop" hidden>
 
   <section class="book-panel" aria-label="Datos del libro">
-    <div class="photo-frame">
+    <div class="photo-frame" id="photoFrame">
       <span class="tape t1"></span><span class="tape t2"></span>
       <div id="coverDrop" class="cover-drop">
         <img id="coverImg" alt="" hidden>
@@ -606,6 +625,27 @@ textarea:focus{ border-color:var(--ink-soft); }
       <p class="photo-caption">la portada</p>
     </div>
     <button id="coverClear" class="cover-clear" hidden>quitar portada</button>
+
+    <div class="frame-color-row">
+      <span class="field-label">marco:</span>
+      <div class="frame-swatches" id="frameSwatches">
+        <button type="button" class="frame-swatch" data-color="#fffdf7" style="background:#fffdf7" title="Crema"></button>
+        <button type="button" class="frame-swatch" data-color="#ffffff" style="background:#ffffff" title="Blanco"></button>
+        <button type="button" class="frame-swatch" data-color="#2b2118" style="background:#2b2118" title="Negro"></button>
+        <button type="button" class="frame-swatch" data-color="#1f2d3d" style="background:#1f2d3d" title="Azul noche"></button>
+        <button type="button" class="frame-swatch" data-color="#5c3d2e" style="background:#5c3d2e" title="Café"></button>
+        <button type="button" class="frame-swatch" data-color="#7a2e2e" style="background:#7a2e2e" title="Vino"></button>
+        <button type="button" class="frame-swatch" data-color="#c9932a" style="background:#c9932a" title="Mostaza"></button>
+        <button type="button" class="frame-swatch" data-color="#4f7a52" style="background:#4f7a52" title="Verde bosque"></button>
+        <button type="button" class="frame-swatch" data-color="#4a7a8c" style="background:#4a7a8c" title="Petróleo"></button>
+        <button type="button" class="frame-swatch" data-color="#a85c7a" style="background:#a85c7a" title="Rosa viejo"></button>
+        <button type="button" class="frame-swatch" data-color="#7a5ca8" style="background:#7a5ca8" title="Lavanda"></button>
+        <label class="frame-swatch frame-swatch-custom" title="Elegir otro color">
+          <span>🎨</span>
+          <input type="color" id="frameColorInput" hidden>
+        </label>
+      </div>
+    </div>
 
     <div class="bookplate-fields">
       <div class="field-row">
@@ -707,7 +747,7 @@ textarea:focus{ border-color:var(--ink-soft); }
 
   function toRoman(n){ return (n>=1 && n<=ROMAN.length) ? ROMAN[n-1] : String(n); }
   function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
-  function blankBook(){ return { id:uid(), title:"", author:"", category:"", cover:null, chapters:[] }; }
+  function blankBook(){ return { id:uid(), title:"", author:"", category:"", cover:null, frameColor:"", chapters:[] }; }
   function defaultData(){ return { books:[] }; }
 
   function escapeToHtml(text){
@@ -724,6 +764,7 @@ textarea:focus{ border-color:var(--ink-soft); }
   function normalizeBook(b){
     if(!b.id) b.id = uid();
     if(typeof b.category !== "string") b.category = "";
+    if(typeof b.frameColor !== "string") b.frameColor = "";
     if(!Array.isArray(b.chapters)) b.chapters = [];
     b.chapters.forEach(c => {
       if(!c.id) c.id = uid();
@@ -798,7 +839,8 @@ textarea:focus{ border-color:var(--ink-soft); }
         categoryTabs = $("#categoryTabs");
   const backLink = $("#backLink"), wordmarkBtn = $("#wordmarkBtn");
   const coverDrop = $("#coverDrop"), coverInput = $("#coverInput"), coverImg = $("#coverImg"),
-        coverEmpty = $("#coverEmpty"), coverClear = $("#coverClear"),
+        coverEmpty = $("#coverEmpty"), coverClear = $("#coverClear"), photoFrame = $("#photoFrame"),
+        frameSwatches = $("#frameSwatches"), frameColorInput = $("#frameColorInput"),
         bookTitle = $("#bookTitle"), bookAuthor = $("#bookAuthor"), bookCategory = $("#bookCategory"),
         categoryOptions = $("#categoryOptions"),
         chapterList = $("#chapterList"), emptyState = $("#emptyState"),
@@ -993,10 +1035,28 @@ textarea:focus{ border-color:var(--ink-soft); }
     } else {
       coverImg.hidden = true; coverEmpty.hidden = false; coverClear.hidden = true;
     }
+    photoFrame.style.background = book.frameColor || "#fff";
+    frameSwatches.querySelectorAll(".frame-swatch[data-color]").forEach(sw => {
+      sw.classList.toggle("active", (book.frameColor || "#fffdf7") === sw.dataset.color);
+    });
+    frameColorInput.value = book.frameColor || "#fffdf7";
   }
   bookTitle.addEventListener("input", () => { const b=getCurrentBook(); if(b){ b.title = bookTitle.value; save(); } });
   bookAuthor.addEventListener("input", () => { const b=getCurrentBook(); if(b){ b.author = bookAuthor.value; save(); } });
   bookCategory.addEventListener("input", () => { const b=getCurrentBook(); if(b){ b.category = bookCategory.value; save(); } });
+
+  frameSwatches.querySelectorAll(".frame-swatch[data-color]").forEach(sw => {
+    sw.addEventListener("click", () => {
+      const b = getCurrentBook(); if(!b) return;
+      b.frameColor = sw.dataset.color;
+      save(); renderBookPanel();
+    });
+  });
+  frameColorInput.addEventListener("input", () => {
+    const b = getCurrentBook(); if(!b) return;
+    b.frameColor = frameColorInput.value;
+    save(); renderBookPanel();
+  });
 
   function readImageFile(file){
     const book = getCurrentBook(); if(!book) return;
@@ -1125,12 +1185,18 @@ textarea:focus{ border-color:var(--ink-soft); }
 
       const meta = node.querySelector(".chapter-meta");
       const editorEl = node.querySelector(".full-text-editor");
-      const focusState = { el:null };
+      const focusState = { el:null, blockId:null };
       editorEl.addEventListener("focusin", e => {
         const el = e.target.closest(".ft-editable");
-        if(el) focusState.el = el;
+        if(el){ focusState.el = el; focusState.blockId = el.dataset.blockId; }
       });
       renderFullTextBlocks(editorEl, chapter, meta, focusState);
+
+      function insertIndex(){
+        if(!focusState.blockId) return chapter.fullTextBlocks.length;
+        const idx = chapter.fullTextBlocks.findIndex(b => b.id === focusState.blockId);
+        return idx === -1 ? chapter.fullTextBlocks.length : idx + 1;
+      }
 
       function applyHighlight(color){
         const el = focusState.el;
@@ -1152,8 +1218,12 @@ textarea:focus{ border-color:var(--ink-soft); }
       eraseBtn.addEventListener("click", () => applyHighlight("transparent"));
 
       node.querySelector(".add-text-block").addEventListener("click", () => {
-        chapter.fullTextBlocks.push({ id:uid(), type:"text", content:"", htmlReady:true });
+        const newBlock = { id:uid(), type:"text", content:"", htmlReady:true };
+        chapter.fullTextBlocks.splice(insertIndex(), 0, newBlock);
+        focusState.blockId = newBlock.id;
         save(); renderFullTextBlocks(editorEl, chapter, meta, focusState);
+        const newEl = editorEl.querySelector(`[data-block-id="${newBlock.id}"]`);
+        if(newEl){ focusState.el = newEl; newEl.focus(); }
       });
 
       const addImageInput = node.querySelector(".add-image-block");
@@ -1161,7 +1231,7 @@ textarea:focus{ border-color:var(--ink-soft); }
         const file = addImageInput.files[0]; if(!file || !file.type.startsWith("image/")) return;
         const reader = new FileReader();
         reader.onload = () => {
-          chapter.fullTextBlocks.push({ id:uid(), type:"image", src:reader.result });
+          chapter.fullTextBlocks.splice(insertIndex(), 0, { id:uid(), type:"image", src:reader.result });
           save(); renderFullTextBlocks(editorEl, chapter, meta, focusState);
         };
         reader.readAsDataURL(file);
@@ -1173,7 +1243,7 @@ textarea:focus{ border-color:var(--ink-soft); }
         const file = uploadTxt.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = () => {
-          chapter.fullTextBlocks.push({ id:uid(), type:"text", content:escapeToHtml(reader.result), htmlReady:true });
+          chapter.fullTextBlocks.splice(insertIndex(), 0, { id:uid(), type:"text", content:escapeToHtml(reader.result), htmlReady:true });
           if(!chapter.title){ chapter.title = file.name.replace(/\.txt$/i,""); titleInput.value = chapter.title; }
           save(); renderFullTextBlocks(editorEl, chapter, meta, focusState);
         };
