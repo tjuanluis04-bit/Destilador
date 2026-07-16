@@ -383,19 +383,20 @@ body::before{
   border:1px solid var(--border);
   box-shadow:3px 5px 14px rgba(60,45,20,0.15);
   position:relative;
-  overflow-x:hidden;
+  overflow:visible;
 }
 .chapter-row:nth-child(odd) .chapter-body{ transform:rotate(-0.35deg); }
 .chapter-row:nth-child(even) .chapter-body{ transform:rotate(0.35deg); }
 
 .chapter-tab{
-  position:absolute; left:-14px; top:14px;
+  position:absolute; left:-9px; top:20px;
   background:var(--pink); color:#3a1620;
   font-family:var(--hand); font-weight:600; font-size:1.3rem;
-  padding:0.35rem 0.7rem 0.35rem 0.9rem;
-  transform:rotate(-3deg);
+  padding:0.35rem 0.75rem;
+  border-radius:2px 6px 6px 2px;
+  transform:rotate(-2deg);
   box-shadow:2px 2px 5px rgba(0,0,0,0.2);
-  z-index:2;
+  z-index:3;
   cursor:pointer;
 }
 .chapter-row:nth-child(3n+2) .chapter-tab{ background:var(--blue); color:#12283b; }
@@ -432,9 +433,7 @@ body::before{
 .icon-btn:hover{ color:var(--ink); border-color:var(--ink); }
 .icon-btn.danger:hover{ color:var(--red); border-color:var(--red); }
 
-.chapter-grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1.15fr; }
-@media (max-width:1100px){ .chapter-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:640px){ .chapter-grid{ grid-template-columns:1fr; } }
+.chapter-grid{ display:flex; flex-wrap:wrap; overflow-x:hidden; }
 
 .cell{
   padding:0.9rem 1rem 1.1rem;
@@ -524,12 +523,12 @@ textarea:focus{ border-color:var(--ink-soft); }
 }
 .ft-editable mark{ border-radius:2px; padding:0 0.05em; }
 .ft-image-block{ position:relative; text-align:center; max-width:100%; }
-.ft-image-frame{ position:relative; display:inline-block; max-width:70%; }
+.ft-image-frame{ position:relative; display:inline-block; max-width:85%; }
 .ft-image-frame img{
-  max-width:100%; max-height:420px; width:auto; height:auto;
+  max-width:100%; max-height:480px; width:auto; height:auto;
   display:block; border-radius:3px; border:4px solid var(--surface);
   box-shadow:0 4px 10px rgba(0,0,0,0.22);
-  object-fit:contain;
+  object-fit:contain; cursor:zoom-in;
 }
 .ft-block-remove{
   position:absolute; top:-8px; right:-8px; z-index:2;
@@ -547,6 +546,28 @@ textarea:focus{ border-color:var(--ink-soft); }
 .ft-block-remove:hover{ opacity:1 !important; color:var(--red); border-color:var(--red); }
 
 .full-text-toolbar{ display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.8rem; }
+.full-text-toolbar-hint{
+  font-family:var(--hand); font-weight:600; font-size:0.78rem; color:var(--muted);
+  margin:0.5rem 0 0; line-height:1.4;
+}
+
+/* ---- visor de imagen a pantalla completa ---- */
+.lightbox-overlay{
+  position:fixed; inset:0; z-index:200;
+  background:rgba(10,8,4,0.88);
+  display:flex; align-items:center; justify-content:center;
+  padding:2rem;
+}
+.lightbox-overlay img{
+  max-width:100%; max-height:100%;
+  border-radius:4px; box-shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+.lightbox-close{
+  position:absolute; top:1rem; right:1rem;
+  width:2.4rem; height:2.4rem; border-radius:50%;
+  background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.35);
+  font-size:1.1rem; cursor:pointer;
+}
 
 .mindmap-wrap{ display:flex; flex-direction:column; gap:0.5rem; flex:1; }
 .mindmap-canvas{
@@ -715,6 +736,7 @@ textarea:focus{ border-color:var(--ink-soft); }
               <input type="file" accept=".txt,text/plain" class="upload-txt" hidden>
             </label>
           </div>
+          <p class="full-text-toolbar-hint">toca dentro del texto justo donde quieras insertar, y luego usa estos botones — se agrega ahí, no al final.</p>
         </div>
         <div class="cell cell-distill">
           <span class="cell-label label-distill">destilación</span>
@@ -735,6 +757,11 @@ textarea:focus{ border-color:var(--ink-soft); }
     </div>
   </article>
 </template>
+
+<div id="lightbox" class="lightbox-overlay" hidden>
+  <button type="button" id="lightboxClose" class="lightbox-close">✕</button>
+  <img id="lightboxImg" alt="">
+</div>
 
 <script>
 (() => {
@@ -834,6 +861,14 @@ textarea:focus{ border-color:var(--ink-soft); }
   function getCurrentBook(){ return data.books.find(b => b.id === currentBookId) || null; }
 
   const $ = sel => document.querySelector(sel);
+
+  // ---------- visor de imagen a pantalla completa ----------
+  const lightbox = $("#lightbox"), lightboxImg = $("#lightboxImg"), lightboxClose = $("#lightboxClose");
+  function openLightbox(src){ lightboxImg.src = src; lightbox.hidden = false; }
+  function closeLightbox(){ lightbox.hidden = true; lightboxImg.src = ""; }
+  lightboxClose.addEventListener("click", closeLightbox);
+  lightbox.addEventListener("click", e => { if(e.target === lightbox) closeLightbox(); });
+  document.addEventListener("keydown", e => { if(e.key === "Escape") closeLightbox(); });
   const shelfView = $("#shelfView"), workshopView = $("#workshopView");
   const shelfSections = $("#shelfSections"), shelfEmptyMsg = $("#shelfEmptyMsg"), addBookBtn = $("#addBookBtn"),
         categoryTabs = $("#categoryTabs");
@@ -1105,6 +1140,8 @@ textarea:focus{ border-color:var(--ink-soft); }
         frame.className = "ft-image-frame";
         const img = document.createElement("img");
         img.src = block.src; img.alt = "";
+        img.title = "Toca para ver completa";
+        img.addEventListener("click", () => openLightbox(block.src));
         const rm = document.createElement("button");
         rm.type = "button"; rm.className = "ft-block-remove";
         rm.textContent = "✕"; rm.title = "Quitar imagen";
