@@ -1,5 +1,5 @@
 // Service worker de Destilador — cachea la app para que abra sin conexión.
-const CACHE_NAME = "destilador-cache-v4";
+const CACHE_NAME = "destilador-cache-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -36,19 +36,17 @@ self.addEventListener("activate", event => {
   );
 });
 
-// Cache-first: sirve desde caché y, si hay red, actualiza la copia en segundo plano.
+// Red primero: mientras haya internet, siempre usa la versión más nueva
+// (así cada actualización se ve de inmediato). Si no hay red, usa la copia guardada.
 self.addEventListener("fetch", event => {
   if(event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const fetchPromise = fetch(event.request).then(response => {
-        if(response && response.status === 200){
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request).then(response => {
+      if(response && response.status === 200){
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      }
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });
