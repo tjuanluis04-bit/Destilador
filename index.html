@@ -439,6 +439,7 @@ body::before{
   padding:0.9rem 1rem 1.1rem;
   border-right:1.5px dashed var(--border-strong);
   display:flex; flex-direction:column; min-height:220px; min-width:0;
+  flex:1 1 320px;
 }
 .cell:last-child{ border-right:none; }
 @media (max-width:1100px){ .cell{ border-bottom:1.5px dashed var(--border-strong); } }
@@ -451,9 +452,75 @@ body::before{
   transform:rotate(-1.5deg);
 }
 .label-text{ color:var(--ink-soft); }
-.label-distill{ background:transparent; color:var(--red); border-bottom:2px solid var(--red); border-radius:0; padding-left:0; }
+.label-distill{ background:var(--pink); color:#3a1620; }
 .label-social{ background:var(--yellow-bg); color:#4a3400; }
 .label-mindmap{ background:var(--green-bg); color:#1c3320; transform:rotate(1.2deg); }
+
+.cell-label-row{ display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
+.copy-btn{
+  background:none; border:1.5px dashed var(--dash); color:var(--ink-soft);
+  width:1.8rem; height:1.8rem; border-radius:3px; cursor:pointer; font-size:0.85rem;
+  flex-shrink:0; transition:color .15s, border-color .15s;
+}
+.copy-btn:hover{ color:var(--ink); border-color:var(--ink); }
+.copy-btn.copied{ color:var(--green); border-color:var(--green); }
+
+/* ---- selector de variantes (destilación / guion social) ---- */
+.variant-bar{ position:relative; }
+.variant-dropdown-btn{
+  display:inline-flex; align-items:center; gap:0.3rem;
+  border:none; cursor:pointer;
+  font-family:var(--hand); font-weight:600; font-size:1.05rem;
+  padding:0.15rem 0.6rem; border-radius:2px; transform:rotate(-1.5deg);
+}
+.variant-dropdown-btn .variant-chevron{ font-size:0.75rem; }
+.variant-dropdown-menu{
+  position:absolute; top:calc(100% + 4px); left:0; z-index:10;
+  background:var(--surface-2); border:1px solid var(--border);
+  border-radius:3px; box-shadow:0 6px 18px rgba(0,0,0,0.25);
+  min-width:220px; padding:0.3rem;
+}
+.variant-option-row{ display:flex; align-items:center; gap:0.2rem; }
+.variant-option{
+  flex:1; text-align:left; background:none; border:none; cursor:pointer;
+  font-family:var(--sans); font-size:0.82rem; color:var(--ink);
+  padding:0.45rem 0.5rem; border-radius:2px;
+}
+.variant-option:hover{ background:var(--surface); }
+.variant-option.active{ background:var(--surface); font-weight:600; color:var(--red); }
+.variant-delete{
+  background:none; border:none; color:var(--muted); cursor:pointer;
+  font-size:0.75rem; padding:0.3rem 0.5rem;
+}
+.variant-delete:hover{ color:var(--red); }
+.variant-divider{ height:1px; background:var(--border); margin:0.25rem 0; }
+.variant-add{
+  width:100%; text-align:left; background:none; border:none; cursor:pointer;
+  font-family:var(--hand); font-weight:600; font-size:0.85rem; color:var(--ink-soft);
+  padding:0.45rem 0.5rem;
+}
+.variant-add:hover{ color:var(--ink); }
+
+/* ---- vista de solo lo marcado ---- */
+.hl-filter-toggle{
+  margin-left:auto; background:none; border:1.5px dashed var(--dash); color:var(--ink-soft);
+  width:1.8rem; height:1.8rem; border-radius:3px; cursor:pointer; font-size:0.8rem;
+}
+.hl-filter-toggle.active{ color:var(--red); border-color:var(--red); }
+.highlight-filter-view{
+  background:var(--surface-2); border:1px solid var(--border);
+  padding:0.9rem 1rem; margin-bottom:0.6rem; font-family:var(--serif); font-size:0.95rem;
+}
+.hf-empty{ font-family:var(--hand); color:var(--muted); font-size:0.9rem; }
+.hf-group{ margin-bottom:0.9rem; }
+.hf-group:last-child{ margin-bottom:0; }
+.hf-group-title{
+  display:inline-flex; align-items:center; gap:0.4rem;
+  font-family:var(--hand); font-weight:600; font-size:0.85rem; color:var(--ink-soft);
+  margin-bottom:0.4rem;
+}
+.hf-dot{ width:0.8rem; height:0.8rem; border-radius:50%; display:inline-block; }
+.hf-item{ padding:0.3rem 0 0.3rem 0.6rem; border-left:3px solid transparent; line-height:1.6; }
 
 textarea{
   width:100%; flex:1;
@@ -716,8 +783,43 @@ textarea:focus{ border-color:var(--ink-soft); }
         </div>
       </div>
       <div class="chapter-grid">
-        <div class="cell cell-text">
-          <span class="cell-label label-text">capítulo completo</span>
+        <div class="cell cell-text" data-role="fulltext">
+          <div class="cell-label-row">
+            <span class="cell-label label-text">capítulo completo</span>
+            <button type="button" class="copy-btn" title="Copiar texto">⧉</button>
+          </div>
+          <div class="highlighter-toolbar">
+            <span class="highlighter-hint">marcar:</span>
+            <button type="button" class="hl-swatch" data-color="#f7e26b" style="background:#f7e26b" title="Amarillo"></button>
+            <button type="button" class="hl-swatch" data-color="#a9d9a0" style="background:#a9d9a0" title="Verde"></button>
+            <button type="button" class="hl-swatch" data-color="#f2a9a9" style="background:#f2a9a9" title="Rojo"></button>
+            <button type="button" class="hl-swatch" data-color="#a9c9e8" style="background:#a9c9e8" title="Azul"></button>
+            <button type="button" class="hl-erase" title="Quitar marca">✕</button>
+            <button type="button" class="hl-filter-toggle" title="Ver solo lo marcado">👁</button>
+          </div>
+          <div class="highlight-filter-view" hidden></div>
+          <div class="full-text-editor"></div>
+          <div class="full-text-toolbar">
+            <button type="button" class="btn btn-tiny add-text-block">+ texto</button>
+            <label class="btn btn-tiny">+ imagen
+              <input type="file" accept="image/*" class="add-image-block" hidden>
+            </label>
+            <label class="btn btn-tiny upload-txt-label">subir .txt
+              <input type="file" accept=".txt,text/plain" class="upload-txt" hidden>
+            </label>
+          </div>
+          <p class="full-text-toolbar-hint">toca dentro del texto justo donde quieras insertar, y luego usa estos botones — se agrega ahí, no al final.</p>
+        </div>
+        <div class="cell cell-distill" data-role="distillation">
+          <div class="cell-label-row">
+            <div class="variant-bar">
+              <button type="button" class="variant-dropdown-btn label-distill cell-label">
+                <span class="variant-current">destilación</span><span class="variant-chevron">▾</span>
+              </button>
+              <div class="variant-dropdown-menu" hidden></div>
+            </div>
+            <button type="button" class="copy-btn" title="Copiar texto">⧉</button>
+          </div>
           <div class="highlighter-toolbar">
             <span class="highlighter-hint">marcar:</span>
             <button type="button" class="hl-swatch" data-color="#f7e26b" style="background:#f7e26b" title="Amarillo"></button>
@@ -732,22 +834,41 @@ textarea:focus{ border-color:var(--ink-soft); }
             <label class="btn btn-tiny">+ imagen
               <input type="file" accept="image/*" class="add-image-block" hidden>
             </label>
-            <label class="btn btn-tiny upload-txt-label">subir .txt
-              <input type="file" accept=".txt,text/plain" class="upload-txt" hidden>
+          </div>
+          <p class="full-text-toolbar-hint">toca dentro del texto justo donde quieras insertar la imagen.</p>
+        </div>
+        <div class="cell cell-social" data-role="social">
+          <div class="cell-label-row">
+            <div class="variant-bar">
+              <button type="button" class="variant-dropdown-btn label-social cell-label">
+                <span class="variant-current">guion social</span><span class="variant-chevron">▾</span>
+              </button>
+              <div class="variant-dropdown-menu" hidden></div>
+            </div>
+            <button type="button" class="copy-btn" title="Copiar texto">⧉</button>
+          </div>
+          <div class="highlighter-toolbar">
+            <span class="highlighter-hint">marcar:</span>
+            <button type="button" class="hl-swatch" data-color="#f7e26b" style="background:#f7e26b" title="Amarillo"></button>
+            <button type="button" class="hl-swatch" data-color="#a9d9a0" style="background:#a9d9a0" title="Verde"></button>
+            <button type="button" class="hl-swatch" data-color="#f2a9a9" style="background:#f2a9a9" title="Rojo"></button>
+            <button type="button" class="hl-swatch" data-color="#a9c9e8" style="background:#a9c9e8" title="Azul"></button>
+            <button type="button" class="hl-erase" title="Quitar marca">✕</button>
+          </div>
+          <div class="full-text-editor"></div>
+          <div class="full-text-toolbar">
+            <button type="button" class="btn btn-tiny add-text-block">+ texto</button>
+            <label class="btn btn-tiny">+ imagen
+              <input type="file" accept="image/*" class="add-image-block" hidden>
             </label>
           </div>
-          <p class="full-text-toolbar-hint">toca dentro del texto justo donde quieras insertar, y luego usa estos botones — se agrega ahí, no al final.</p>
-        </div>
-        <div class="cell cell-distill">
-          <span class="cell-label label-distill">destilación</span>
-          <textarea class="distillation" placeholder="la idea reducida a su forma más pura…"></textarea>
-        </div>
-        <div class="cell cell-social">
-          <span class="cell-label label-social">guion social</span>
-          <textarea class="social-script" placeholder="el gancho, el desarrollo, el cierre…"></textarea>
+          <p class="full-text-toolbar-hint">toca dentro del texto justo donde quieras insertar la imagen.</p>
         </div>
         <div class="cell cell-mindmap">
-          <span class="cell-label label-mindmap">mapa mental</span>
+          <div class="cell-label-row">
+            <span class="cell-label label-mindmap">mapa mental</span>
+            <button type="button" class="copy-btn" title="Copiar texto">⧉</button>
+          </div>
           <div class="mindmap-wrap">
             <svg class="mindmap-canvas" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid meet"></svg>
             <p class="mindmap-hint">toca el papel para anotar una idea · arrastra para moverla · toca dos ideas para unirlas</p>
@@ -788,6 +909,35 @@ textarea:focus{ border-color:var(--ink-soft); }
     return div.textContent || "";
   }
 
+  function normalizeVariantField(c, variantsKey, activeKey, legacyStringKey, legacyBlocksKey){
+    if(!Array.isArray(c[variantsKey])){
+      let blocks;
+      if(Array.isArray(c[legacyBlocksKey])){
+        blocks = c[legacyBlocksKey];
+      } else {
+        const legacyText = typeof c[legacyStringKey] === "string" ? c[legacyStringKey] : "";
+        blocks = [{ id:uid(), type:"text", content:legacyText }];
+      }
+      c[variantsKey] = [{ id:uid(), title:"v1", blocks:blocks }];
+    }
+    c[variantsKey].forEach(v => {
+      if(!v.id) v.id = uid();
+      if(typeof v.title !== "string" || !v.title) v.title = "v1";
+      if(!Array.isArray(v.blocks)) v.blocks = [];
+      if(v.blocks.length === 0) v.blocks.push({ id:uid(), type:"text", content:"", htmlReady:true });
+      v.blocks.forEach(block => {
+        if(!block.id) block.id = uid();
+        if(block.type === "text" && !block.htmlReady){
+          block.content = escapeToHtml(block.content || "");
+          block.htmlReady = true;
+        }
+      });
+    });
+    if(!c[activeKey] || !c[variantsKey].some(v => v.id === c[activeKey])){
+      c[activeKey] = c[variantsKey][0].id;
+    }
+  }
+
   function normalizeBook(b){
     if(!b.id) b.id = uid();
     if(typeof b.category !== "string") b.category = "";
@@ -809,6 +959,8 @@ textarea:focus{ border-color:var(--ink-soft); }
           block.htmlReady = true;
         }
       });
+      normalizeVariantField(c, "distillationVariants", "distillationActiveId", "distillation", "distillationBlocks");
+      normalizeVariantField(c, "socialVariants", "socialActiveId", "socialScript", "socialScriptBlocks");
     });
     return b;
   }
@@ -869,6 +1021,29 @@ textarea:focus{ border-color:var(--ink-soft); }
   lightboxClose.addEventListener("click", closeLightbox);
   lightbox.addEventListener("click", e => { if(e.target === lightbox) closeLightbox(); });
   document.addEventListener("keydown", e => { if(e.key === "Escape") closeLightbox(); });
+
+  // Rastrea en todo momento dónde está el cursor/selección dentro de cualquier
+  // bloque de texto editable, para poder insertar imágenes justo ahí.
+  document.addEventListener("selectionchange", () => {
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount === 0) return;
+    const anchor = sel.anchorNode;
+    if(!anchor) return;
+    const node = anchor.nodeType === 1 ? anchor : anchor.parentElement;
+    const el = node && node.closest ? node.closest(".ft-editable") : null;
+    if(el && el._focusState){
+      el._focusState.el = el;
+      el._focusState.blockId = el.dataset.blockId;
+      try{ el._focusState.savedRange = sel.getRangeAt(0).cloneRange(); }catch(e){ /* selección no válida, se ignora */ }
+    }
+  });
+
+  // Cierra cualquier menú de variantes abierto al tocar fuera de él.
+  document.addEventListener("click", e => {
+    document.querySelectorAll(".variant-dropdown-menu").forEach(menu => {
+      if(!menu.hidden && !menu.parentElement.contains(e.target)) menu.hidden = true;
+    });
+  });
   const shelfView = $("#shelfView"), workshopView = $("#workshopView");
   const shelfSections = $("#shelfSections"), shelfEmptyMsg = $("#shelfEmptyMsg"), addBookBtn = $("#addBookBtn"),
         categoryTabs = $("#categoryTabs");
@@ -1114,10 +1289,15 @@ textarea:focus{ border-color:var(--ink-soft); }
   // ---------- capítulos ----------
   function addChapter(){
     const book = getCurrentBook(); if(!book) return;
+    const distillId = uid(), socialId = uid();
     const chapter = {
       id:uid(), title:"",
       fullTextBlocks:[{ id:uid(), type:"text", content:"", htmlReady:true }],
-      distillation:"", socialScript:"", mindmap:{nodes:[],edges:[]}
+      distillationVariants:[{ id:distillId, title:"v1", blocks:[{ id:uid(), type:"text", content:"", htmlReady:true }] }],
+      distillationActiveId:distillId,
+      socialVariants:[{ id:socialId, title:"v1", blocks:[{ id:uid(), type:"text", content:"", htmlReady:true }] }],
+      socialActiveId:socialId,
+      mindmap:{nodes:[],edges:[]}
     };
     book.chapters.push(chapter);
     openChapterId = chapter.id;
@@ -1125,14 +1305,26 @@ textarea:focus{ border-color:var(--ink-soft); }
   }
   addChapterBtn.addEventListener("click", addChapter);
 
-  function computeWordCount(chapter){
-    const text = chapter.fullTextBlocks.filter(b => b.type === "text").map(b => stripHtml(b.content)).join(" ");
+  function computeWordCount(blocks){
+    const text = blocks.filter(b => b.type === "text").map(b => stripHtml(b.content)).join(" ");
     return wordCount(text);
   }
 
-  function renderFullTextBlocks(container, chapter, metaEl, focusState){
+  function splitBlockAtRange(el, range){
+    const rangeBefore = document.createRange();
+    rangeBefore.selectNodeContents(el);
+    rangeBefore.setEnd(range.endContainer, range.endOffset);
+    const rangeAfter = document.createRange();
+    rangeAfter.selectNodeContents(el);
+    rangeAfter.setStart(range.endContainer, range.endOffset);
+    const divBefore = document.createElement("div"); divBefore.appendChild(rangeBefore.cloneContents());
+    const divAfter = document.createElement("div"); divAfter.appendChild(rangeAfter.cloneContents());
+    return { before: divBefore.innerHTML, after: divAfter.innerHTML };
+  }
+
+  function renderBlockList(container, blocks, onChange){
     container.innerHTML = "";
-    chapter.fullTextBlocks.forEach(block => {
+    blocks.forEach(block => {
       if(block.type === "image"){
         const wrap = document.createElement("div");
         wrap.className = "ft-image-block";
@@ -1146,8 +1338,9 @@ textarea:focus{ border-color:var(--ink-soft); }
         rm.type = "button"; rm.className = "ft-block-remove";
         rm.textContent = "✕"; rm.title = "Quitar imagen";
         rm.addEventListener("click", () => {
-          chapter.fullTextBlocks = chapter.fullTextBlocks.filter(b => b.id !== block.id);
-          save(); renderFullTextBlocks(container, chapter, metaEl, focusState);
+          const i = blocks.findIndex(b => b.id === block.id);
+          if(i >= 0) blocks.splice(i, 1);
+          onChange();
         });
         frame.appendChild(img); frame.appendChild(rm);
         wrap.appendChild(frame);
@@ -1159,30 +1352,287 @@ textarea:focus{ border-color:var(--ink-soft); }
         ed.className = "ft-editable";
         ed.contentEditable = "true";
         ed.spellcheck = false;
-        ed.dataset.placeholder = "texto del capítulo…";
+        ed.dataset.placeholder = "texto…";
         ed.dataset.blockId = block.id;
         ed.innerHTML = block.content || "";
+        ed._focusState = container._focusState;
         ed.addEventListener("input", () => {
           if(ed.innerHTML === "<br>") ed.innerHTML = "";
           block.content = ed.innerHTML;
-          metaEl.textContent = computeWordCount(chapter) + " palabras";
           save();
+          if(container._onTextInput) container._onTextInput();
         });
         wrap.appendChild(ed);
-        if(chapter.fullTextBlocks.length > 1){
+        if(blocks.length > 1){
           const rm = document.createElement("button");
           rm.type = "button"; rm.className = "ft-block-remove";
           rm.textContent = "✕"; rm.title = "Quitar bloque";
           rm.addEventListener("click", () => {
-            chapter.fullTextBlocks = chapter.fullTextBlocks.filter(b => b.id !== block.id);
-            save(); renderFullTextBlocks(container, chapter, metaEl, focusState);
+            const i = blocks.findIndex(b => b.id === block.id);
+            if(i >= 0) blocks.splice(i, 1);
+            onChange();
           });
           wrap.appendChild(rm);
         }
         container.appendChild(wrap);
       }
     });
-    metaEl.textContent = computeWordCount(chapter) + " palabras";
+  }
+
+  function copyToClipboard(text, btn){
+    const done = () => {
+      if(!btn) return;
+      const original = btn.textContent;
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = original; btn.classList.remove("copied"); }, 1200);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand("copy"); }catch(e){}
+      document.body.removeChild(ta);
+      done();
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else { fallback(); }
+  }
+
+  const HL_NAMES = { "#f7e26b":"Amarillo", "#a9d9a0":"Verde", "#f2a9a9":"Rojo", "#a9c9e8":"Azul" };
+  function rgbToHex(rgb){
+    const m = String(rgb).match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if(!m) return null;
+    return "#" + [1,2,3].map(i => (+m[i]).toString(16).padStart(2,"0")).join("");
+  }
+  function extractHighlights(blocks){
+    const groups = {};
+    blocks.filter(b => b.type === "text").forEach(b => {
+      const div = document.createElement("div");
+      div.innerHTML = b.content || "";
+      div.querySelectorAll('[style*="background-color"]').forEach(node => {
+        const bg = node.style && node.style.backgroundColor;
+        if(!bg || bg === "transparent") return;
+        const hex = (rgbToHex(bg) || bg).toLowerCase();
+        const text = node.textContent.trim();
+        if(!text) return;
+        if(!groups[hex]) groups[hex] = [];
+        groups[hex].push(text);
+      });
+    });
+    return groups;
+  }
+  function renderHighlightFilterView(container, blocks){
+    const groups = extractHighlights(blocks);
+    const keys = Object.keys(groups);
+    if(keys.length === 0){
+      container.innerHTML = `<p class="hf-empty">Todavía no has marcado ninguna frase en este capítulo.</p>`;
+      return;
+    }
+    container.innerHTML = "";
+    const order = ["#f7e26b","#a9d9a0","#f2a9a9","#a9c9e8"];
+    const sortedKeys = [...order.filter(k => groups[k]), ...keys.filter(k => !order.includes(k))];
+    sortedKeys.forEach(hex => {
+      const group = document.createElement("div");
+      group.className = "hf-group";
+      const title = document.createElement("div");
+      title.className = "hf-group-title";
+      title.innerHTML = `<span class="hf-dot" style="background:${hex}"></span> ${HL_NAMES[hex] || "color"}`;
+      group.appendChild(title);
+      groups[hex].forEach(text => {
+        const item = document.createElement("div");
+        item.className = "hf-item";
+        item.style.borderLeftColor = hex;
+        item.textContent = text;
+        group.appendChild(item);
+      });
+      container.appendChild(group);
+    });
+  }
+
+  // Editor de bloques (texto contenteditable + imágenes) reutilizado por
+  // capítulo completo, destilación y guion social.
+  function setupBlockCard(cellNode, getBlocks, config){
+    config = config || {};
+    const editorEl = cellNode.querySelector(".full-text-editor");
+    const toolbar = cellNode.querySelector(".full-text-toolbar");
+    const hlToolbar = cellNode.querySelector(".highlighter-toolbar");
+    const copyBtn = cellNode.querySelector(".copy-btn");
+    const metaEl = config.metaEl || null;
+    const focusState = { el:null, blockId:null, savedRange:null };
+    editorEl._focusState = focusState;
+    editorEl._onTextInput = () => { if(metaEl) metaEl.textContent = computeWordCount(getBlocks()) + " palabras"; };
+
+    function rerender(){
+      renderBlockList(editorEl, getBlocks(), onBlockChange);
+      if(metaEl) metaEl.textContent = computeWordCount(getBlocks()) + " palabras";
+    }
+    function onBlockChange(){ save(); rerender(); }
+
+    function insertBlocks(newBlocks){
+      const blocks = getBlocks();
+      const el = focusState.el, range = focusState.savedRange;
+      if(el && range && el.isConnected && editorEl.contains(el) && blocks.some(b => b.id === el.dataset.blockId) && el.contains(range.endContainer)){
+        const idx = blocks.findIndex(b => b.id === el.dataset.blockId);
+        const { before, after } = splitBlockAtRange(el, range);
+        blocks[idx].content = before || ""; blocks[idx].htmlReady = true;
+        const tail = [];
+        if(after && after.trim() !== "" && after !== "<br>"){
+          tail.push({ id:uid(), type:"text", content:after, htmlReady:true });
+        }
+        blocks.splice(idx + 1, 0, ...newBlocks, ...tail);
+      } else {
+        blocks.push(...newBlocks);
+      }
+    }
+
+    if(toolbar){
+      const addTextBtn = toolbar.querySelector(".add-text-block");
+      if(addTextBtn) addTextBtn.addEventListener("click", () => {
+        const nb = { id:uid(), type:"text", content:"", htmlReady:true };
+        insertBlocks([nb]);
+        save(); rerender();
+        const newEl = editorEl.querySelector(`[data-block-id="${nb.id}"]`);
+        if(newEl){ focusState.el = newEl; newEl.focus(); }
+      });
+      const addImgInput = toolbar.querySelector(".add-image-block");
+      if(addImgInput) addImgInput.addEventListener("change", () => {
+        const file = addImgInput.files[0]; if(!file || !file.type.startsWith("image/")) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          insertBlocks([{ id:uid(), type:"image", src:reader.result }]);
+          save(); rerender();
+        };
+        reader.readAsDataURL(file);
+        addImgInput.value = "";
+      });
+      const uploadTxt = toolbar.querySelector(".upload-txt");
+      if(uploadTxt) uploadTxt.addEventListener("change", () => {
+        const file = uploadTxt.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          insertBlocks([{ id:uid(), type:"text", content:escapeToHtml(reader.result), htmlReady:true }]);
+          save(); rerender();
+          if(config.onTxtUpload) config.onTxtUpload(file);
+        };
+        reader.readAsText(file); uploadTxt.value = "";
+      });
+    }
+
+    if(hlToolbar){
+      function applyHighlight(color){
+        const el = focusState.el;
+        if(!el) return;
+        el.focus();
+        try{
+          document.execCommand("styleWithCSS", false, true);
+          document.execCommand("hiliteColor", false, color);
+        }catch(err){ /* execCommand puede no estar soportado; se ignora en silencio */ }
+        const b = getBlocks().find(bb => bb.id === el.dataset.blockId);
+        if(b){ b.content = el.innerHTML; save(); }
+      }
+      hlToolbar.querySelectorAll(".hl-swatch").forEach(btn => {
+        btn.addEventListener("pointerdown", e => e.preventDefault());
+        btn.addEventListener("click", () => applyHighlight(btn.dataset.color));
+      });
+      const eraseBtn = hlToolbar.querySelector(".hl-erase");
+      if(eraseBtn){
+        eraseBtn.addEventListener("pointerdown", e => e.preventDefault());
+        eraseBtn.addEventListener("click", () => applyHighlight("transparent"));
+      }
+      if(config.hasHighlightFilter){
+        const filterToggle = hlToolbar.querySelector(".hl-filter-toggle");
+        const filterView = cellNode.querySelector(".highlight-filter-view");
+        filterToggle.addEventListener("click", () => {
+          const turningOn = filterView.hidden;
+          filterToggle.classList.toggle("active", turningOn);
+          editorEl.hidden = turningOn;
+          toolbar.hidden = turningOn;
+          if(turningOn) renderHighlightFilterView(filterView, getBlocks());
+          filterView.hidden = !turningOn;
+        });
+      }
+    }
+
+    if(copyBtn){
+      copyBtn.addEventListener("click", () => {
+        const text = getBlocks().filter(b => b.type === "text").map(b => stripHtml(b.content)).join("\n\n");
+        copyToClipboard(text, copyBtn);
+      });
+    }
+
+    rerender();
+    return { rerender, focusState };
+  }
+
+  // Selector de versiones (destilación / guion social): reusa setupBlockCard
+  // apuntando siempre a los bloques de la versión activa.
+  function setupVariantCard(cellNode, chapter, variantsKey, activeKey, labelText){
+    const dropdownBtn = cellNode.querySelector(".variant-dropdown-btn");
+    const currentLabel = dropdownBtn.querySelector(".variant-current");
+    const menu = cellNode.querySelector(".variant-dropdown-menu");
+
+    function activeVariant(){
+      return chapter[variantsKey].find(v => v.id === chapter[activeKey]) || chapter[variantsKey][0];
+    }
+    function updateLabel(){
+      const variant = activeVariant();
+      currentLabel.textContent = chapter[variantsKey].length > 1 ? `${labelText} · ${variant.title}` : labelText;
+    }
+
+    const card = setupBlockCard(cellNode, () => activeVariant().blocks, {});
+
+    function renderMenu(){
+      menu.innerHTML = "";
+      chapter[variantsKey].forEach(v => {
+        const row = document.createElement("div");
+        row.className = "variant-option-row";
+        const opt = document.createElement("button");
+        opt.type = "button";
+        opt.className = "variant-option" + (v.id === chapter[activeKey] ? " active" : "");
+        opt.textContent = v.title;
+        opt.addEventListener("click", () => {
+          chapter[activeKey] = v.id;
+          save(); menu.hidden = true; updateLabel(); card.rerender();
+        });
+        row.appendChild(opt);
+        if(chapter[variantsKey].length > 1){
+          const del = document.createElement("button");
+          del.type = "button"; del.className = "variant-delete"; del.textContent = "✕"; del.title = "Eliminar versión";
+          del.addEventListener("click", e => {
+            e.stopPropagation();
+            if(!confirm(`¿Eliminar la versión "${v.title}"?`)) return;
+            chapter[variantsKey] = chapter[variantsKey].filter(vv => vv.id !== v.id);
+            if(chapter[activeKey] === v.id) chapter[activeKey] = chapter[variantsKey][0].id;
+            save(); renderMenu(); updateLabel(); card.rerender();
+          });
+          row.appendChild(del);
+        }
+        menu.appendChild(row);
+      });
+      const divider = document.createElement("div");
+      divider.className = "variant-divider";
+      menu.appendChild(divider);
+      const addBtn = document.createElement("button");
+      addBtn.type = "button"; addBtn.className = "variant-add"; addBtn.textContent = "+ Añadir nueva versión";
+      addBtn.addEventListener("click", () => {
+        const title = prompt("Nombre de la nueva versión:", `v${chapter[variantsKey].length + 1}`);
+        if(title === null || !title.trim()) return;
+        const nv = { id:uid(), title:title.trim(), blocks:[{ id:uid(), type:"text", content:"", htmlReady:true }] };
+        chapter[variantsKey].push(nv);
+        chapter[activeKey] = nv.id;
+        save(); menu.hidden = true; renderMenu(); updateLabel(); card.rerender();
+      });
+      menu.appendChild(addBtn);
+    }
+
+    dropdownBtn.addEventListener("click", () => {
+      const willOpen = menu.hidden;
+      document.querySelectorAll(".variant-dropdown-menu").forEach(m => { m.hidden = true; });
+      if(willOpen){ renderMenu(); menu.hidden = false; }
+    });
+
+    updateLabel();
   }
 
   function renderChapters(){
@@ -1221,79 +1671,26 @@ textarea:focus{ border-color:var(--ink-soft); }
       titleInput.addEventListener("click", e => e.stopPropagation());
 
       const meta = node.querySelector(".chapter-meta");
-      const editorEl = node.querySelector(".full-text-editor");
-      const focusState = { el:null, blockId:null };
-      editorEl.addEventListener("focusin", e => {
-        const el = e.target.closest(".ft-editable");
-        if(el){ focusState.el = el; focusState.blockId = el.dataset.blockId; }
-      });
-      renderFullTextBlocks(editorEl, chapter, meta, focusState);
-
-      function insertIndex(){
-        if(!focusState.blockId) return chapter.fullTextBlocks.length;
-        const idx = chapter.fullTextBlocks.findIndex(b => b.id === focusState.blockId);
-        return idx === -1 ? chapter.fullTextBlocks.length : idx + 1;
-      }
-
-      function applyHighlight(color){
-        const el = focusState.el;
-        if(!el) return;
-        el.focus();
-        try{
-          document.execCommand("styleWithCSS", false, true);
-          document.execCommand("hiliteColor", false, color);
-        }catch(err){ /* execCommand puede no estar soportado; se ignora en silencio */ }
-        const block = chapter.fullTextBlocks.find(b => b.id === el.dataset.blockId);
-        if(block){ block.content = el.innerHTML; save(); }
-      }
-      node.querySelectorAll(".hl-swatch").forEach(btn => {
-        btn.addEventListener("pointerdown", e => e.preventDefault());
-        btn.addEventListener("click", () => applyHighlight(btn.dataset.color));
-      });
-      const eraseBtn = node.querySelector(".hl-erase");
-      eraseBtn.addEventListener("pointerdown", e => e.preventDefault());
-      eraseBtn.addEventListener("click", () => applyHighlight("transparent"));
-
-      node.querySelector(".add-text-block").addEventListener("click", () => {
-        const newBlock = { id:uid(), type:"text", content:"", htmlReady:true };
-        chapter.fullTextBlocks.splice(insertIndex(), 0, newBlock);
-        focusState.blockId = newBlock.id;
-        save(); renderFullTextBlocks(editorEl, chapter, meta, focusState);
-        const newEl = editorEl.querySelector(`[data-block-id="${newBlock.id}"]`);
-        if(newEl){ focusState.el = newEl; newEl.focus(); }
-      });
-
-      const addImageInput = node.querySelector(".add-image-block");
-      addImageInput.addEventListener("change", () => {
-        const file = addImageInput.files[0]; if(!file || !file.type.startsWith("image/")) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          chapter.fullTextBlocks.splice(insertIndex(), 0, { id:uid(), type:"image", src:reader.result });
-          save(); renderFullTextBlocks(editorEl, chapter, meta, focusState);
-        };
-        reader.readAsDataURL(file);
-        addImageInput.value = "";
-      });
-
-      const uploadTxt = node.querySelector(".upload-txt");
-      uploadTxt.addEventListener("change", () => {
-        const file = uploadTxt.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          chapter.fullTextBlocks.splice(insertIndex(), 0, { id:uid(), type:"text", content:escapeToHtml(reader.result), htmlReady:true });
+      const textCell = node.querySelector('.cell[data-role="fulltext"]');
+      setupBlockCard(textCell, () => chapter.fullTextBlocks, {
+        metaEl: meta,
+        hasHighlightFilter: true,
+        onTxtUpload: file => {
           if(!chapter.title){ chapter.title = file.name.replace(/\.txt$/i,""); titleInput.value = chapter.title; }
-          save(); renderFullTextBlocks(editorEl, chapter, meta, focusState);
-        };
-        reader.readAsText(file); uploadTxt.value = "";
+        }
       });
 
-      const distill = node.querySelector(".distillation");
-      distill.value = chapter.distillation;
-      distill.addEventListener("input", () => { chapter.distillation = distill.value; save(); });
+      const distillCell = node.querySelector('.cell[data-role="distillation"]');
+      setupVariantCard(distillCell, chapter, "distillationVariants", "distillationActiveId", "destilación");
 
-      const social = node.querySelector(".social-script");
-      social.value = chapter.socialScript;
-      social.addEventListener("input", () => { chapter.socialScript = social.value; save(); });
+      const socialCell = node.querySelector('.cell[data-role="social"]');
+      setupVariantCard(socialCell, chapter, "socialVariants", "socialActiveId", "guion social");
+
+      const mindmapCopyBtn = node.querySelector(".cell-mindmap .copy-btn");
+      mindmapCopyBtn.addEventListener("click", () => {
+        const text = chapter.mindmap.nodes.map(n => n.label).filter(Boolean).join("\n");
+        copyToClipboard(text || "(sin ideas en el mapa mental)", mindmapCopyBtn);
+      });
 
       node.querySelector(".move-up").addEventListener("click", () => {
         if(index === 0) return;
