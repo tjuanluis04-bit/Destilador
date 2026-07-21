@@ -48,7 +48,14 @@ jobs:
         run: bubblewrap doctor
 
       - name: Restaurar la llave de firma desde los secretos
-        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 -d > android.keystore
+          ls -la android.keystore
+
+      - name: Verificar que la llave y la contraseña combinan (falla rápido si no)
+        run: |
+          keytool -list -keystore android.keystore -alias destilador -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            || (echo "::error::La contraseña o el archivo de la llave no coinciden. Vuelve a generar la llave y los 3 secretos desde cero, todos de la MISMA ejecución del workflow 1." && exit 1)
 
       - name: Generar el proyecto Android a partir del manifest en línea
         run: yes "" | bubblewrap init --manifest="${{ env.MANIFEST_URL }}" --directory=.
