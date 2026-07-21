@@ -35,8 +35,14 @@ jobs:
       - name: Instalar Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Decirle a Bubblewrap dónde quedaron el JDK y el SDK
-        run: bubblewrap updateConfig --jdkPath="$JAVA_HOME" --androidSdkPath="$ANDROID_HOME"
+      - name: Escribir la configuración de Bubblewrap directamente
+        # bubblewrap updateConfig tiene un bug conocido: a veces pregunta
+        # igual aunque le pases las rutas por parámetro. Escribir el
+        # archivo de configuración a mano evita ese problema por completo.
+        run: |
+          mkdir -p "$HOME/.bubblewrap"
+          printf '{"jdkPath":"%s","androidSdkPath":"%s"}' "$JAVA_HOME" "$ANDROID_HOME" > "$HOME/.bubblewrap/config.json"
+          cat "$HOME/.bubblewrap/config.json"
 
       - name: Verificar que las rutas quedaron bien (solo diagnóstico)
         run: bubblewrap doctor
