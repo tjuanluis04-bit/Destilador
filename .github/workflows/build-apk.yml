@@ -51,7 +51,7 @@ jobs:
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
 
       - name: Generar el proyecto Android a partir del manifest en línea
-        run: bubblewrap init --manifest="${{ env.MANIFEST_URL }}" --directory=.
+        run: yes "" | bubblewrap init --manifest="${{ env.MANIFEST_URL }}" --directory=.
 
       - name: Fijar el packageId y la llave de firma correctos
         run: |
