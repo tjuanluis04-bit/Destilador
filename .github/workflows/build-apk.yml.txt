@@ -1,0 +1,54 @@
+name: 2 - Compilar APK
+
+# Requiere que ya hayas corrido el workflow "1 - Generar llave de firma"
+# y guardado sus 3 valores como secretos del repositorio:
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD
+#
+# También edita MANIFEST_URL más abajo si tu sitio no está en la raíz de
+# tu dominio de GitHub Pages (por ejemplo si es un project page con una
+# carpeta extra en la URL).
+
+on:
+  workflow_dispatch:
+
+env:
+  MANIFEST_URL: https://nluis04-bit.github.io/manifest.json
+  PACKAGE_ID: io.github.nluis04bit.destilador
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/googlechromelabs/bubblewrap:latest
+
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Restaurar la llave de firma desde los secretos
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
+
+      - name: Generar el proyecto Android a partir del manifest en línea
+        run: yes "" | bubblewrap init --manifest="${{ env.MANIFEST_URL }}" --directory=. || true
+
+      - name: Fijar el packageId y la llave de firma correctos
+        run: |
+          node -e "
+            const fs = require('fs');
+            const m = JSON.parse(fs.readFileSync('twa-manifest.json', 'utf8'));
+            m.packageId = process.env.PACKAGE_ID;
+            m.signingKey = { path: './android.keystore', alias: 'destilador' };
+            fs.writeFileSync('twa-manifest.json', JSON.stringify(m, null, 2));
+          "
+
+      - name: Compilar y firmar la APK
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: bubblewrap build
+
+      - name: Subir la APK compilada
+        uses: actions/upload-artifact@v4
+        with:
+          name: destilador-apk
+          path: app-release-signed.apk

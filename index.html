@@ -9,9 +9,9 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 /* ============================================================
    DESTILADOR — bitácora escrita a mano
@@ -1130,14 +1130,21 @@ textarea:focus{ border-color:var(--ink-soft); }
   let fbAuth = null, fbDb = null, firebaseReady = false, currentUser = null;
   let cloudSaveTimer = null, cloudBusy = false;
 
-  try{
-    if(typeof firebase !== "undefined"){
-      firebase.initializeApp(firebaseConfig);
-      fbAuth = firebase.auth();
-      fbDb = firebase.firestore();
-      firebaseReady = true;
-    }
-  }catch(e){ console.warn("Firebase no se pudo inicializar.", e); }
+  function initFirebaseWhenReady(){
+    try{
+      if(typeof firebase !== "undefined" && !firebaseReady){
+        firebase.initializeApp(firebaseConfig);
+        fbAuth = firebase.auth();
+        fbDb = firebase.firestore();
+        firebaseReady = true;
+        fbAuth.onAuthStateChanged(user => { if(user) handleSignedIn(user); else handleSignedOut(); });
+        fbAuth.getRedirectResult().catch(() => { /* sin resultado pendiente, se ignora */ });
+      } else if(!firebaseReady){
+        // sin internet la primera vez: los scripts de Firebase no llegaron a cargar.
+        signInBtn.title = "El inicio de sesión necesita conexión a internet la primera vez";
+      }
+    }catch(e){ console.warn("Firebase no se pudo inicializar.", e); }
+  }
 
   function booksCollection(uid){ return fbDb.collection("users").doc(uid).collection("books"); }
 
@@ -1229,12 +1236,12 @@ textarea:focus{ border-color:var(--ink-soft); }
     accountMenu.hidden = true;
   }
 
-  if(firebaseReady){
-    fbAuth.onAuthStateChanged(user => { if(user) handleSignedIn(user); else handleSignedOut(); });
-    fbAuth.getRedirectResult().catch(() => { /* sin resultado pendiente, se ignora */ });
-  } else {
-    signInBtn.title = "El inicio de sesión necesita conexión a internet la primera vez";
-  }
+  // Firebase se carga con "defer", así que puede terminar de llegar después
+  // de este punto (o nunca, si no hay internet). "load" garantiza que ya
+  // se intentó todo lo posible, y si no llegó, la app sigue 100% funcional
+  // en modo local sin más que ese único botón deshabilitado.
+  if(document.readyState === "complete") initFirebaseWhenReady();
+  else window.addEventListener("load", initFirebaseWhenReady);
 
   signInBtn.addEventListener("click", () => {
     if(!firebaseReady){ alert("No se pudo cargar el inicio de sesión de Google. Revisa tu conexión a internet e intenta de nuevo."); return; }
