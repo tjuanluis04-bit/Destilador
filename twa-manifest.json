@@ -1,6 +1,6 @@
 {
-  "packageId": "io.github.nluis04bit.destilador",
-  "host": "nluis04-bit.github.io",
+  "packageId": "io.github.tjuanluis04bit.destilador",
+  "host": "tjuanluis04-bit.github.io",
   "name": "Destilador",
   "launcherName": "Destilador",
   "display": "standalone",
@@ -12,9 +12,9 @@
   "navigationDividerColorDark": "#00000000",
   "backgroundColor": "#F2E9D3",
   "enableNotifications": false,
-  "startUrl": "/",
-  "iconUrl": "https://nluis04-bit.github.io/icons/icon-512.png",
-  "maskableIconUrl": "https://nluis04-bit.github.io/icons/icon-512-maskable.png",
+  "startUrl": "/Destilador/",
+  "iconUrl": "https://tjuanluis04-bit.github.io/Destilador/icons/icon-512.png",
+  "maskableIconUrl": "https://tjuanluis04-bit.github.io/Destilador/icons/icon-512-maskable.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
@@ -24,10 +24,12 @@
   "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://nluis04-bit.github.io/manifest.json",
+  "webManifestUrl": "https://tjuanluis04-bit.github.io/Destilador/manifest.json",
   "fallbackType": "customtabs",
   "features": {},
-  "alphaDependencies": { "enabled": false },
+  "alphaDependencies": {
+    "enabled": false
+  },
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,

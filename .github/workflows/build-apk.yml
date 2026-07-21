@@ -12,8 +12,8 @@ on:
   workflow_dispatch:
 
 env:
-  MANIFEST_URL: https://nluis04-bit.github.io/manifest.json
-  PACKAGE_ID: io.github.nluis04bit.destilador
+  MANIFEST_URL: https://tjuanluis04-bit.github.io/Destilador/manifest.json
+  PACKAGE_ID: io.github.tjuanluis04bit.destilador
 
 jobs:
   build:
