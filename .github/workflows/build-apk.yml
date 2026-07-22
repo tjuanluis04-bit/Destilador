@@ -47,10 +47,7 @@ jobs:
       - name: Verificar que las rutas quedaron bien (solo diagnóstico)
         run: bubblewrap doctor
 
-      - name: Generar el proyecto Android a partir del manifest en línea
-        run: yes "" | bubblewrap init --manifest="${{ env.MANIFEST_URL }}" --directory=.
-
-      - name: Restaurar la llave de firma desde los secretos (después de init, para que no la sobrescriba)
+      - name: Restaurar la llave de firma desde los secretos
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 -d > android.keystore
           ls -la android.keystore
@@ -59,6 +56,15 @@ jobs:
         run: |
           keytool -list -keystore android.keystore -alias destilador -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             || (echo "::error::La contraseña o el archivo de la llave no coinciden. Vuelve a generar la llave y los 3 secretos desde cero, todos de la MISMA ejecución del workflow 1." && exit 1)
+
+      - name: Generar el proyecto Android a partir del manifest en línea
+        run: yes "" | bubblewrap init --manifest="${{ env.MANIFEST_URL }}" --directory=.
+
+      - name: Verificar que la llave sigue intacta después de init (diagnóstico)
+        run: |
+          keytool -list -keystore android.keystore -alias destilador -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            && echo "La llave sigue siendo la correcta después de init." \
+            || echo "::warning::init modificó o reemplazó android.keystore — esta es la causa real del problema."
 
       - name: Fijar el packageId y la llave de firma correctos
         run: |
@@ -74,7 +80,7 @@ jobs:
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: yes "" | bubblewrap build
+        run: printf 'y\n' | bubblewrap build
 
       - name: Subir la APK compilada
         uses: actions/upload-artifact@v4
